@@ -4,12 +4,36 @@
 
 #include "CoreMinimal.h"
 
+enum ChildNode
+{
+	Northwest = 0,
+	Northeast = 1,
+	Southwest = 2,
+	Southeast = 3
+};
+
 /**
  * 
  */
 class CONWAYSGAMEOFLIFE_API QuadTreeNode
 {
 public:
-	QuadTreeNode();
-	~QuadTreeNode();
+	const uint8 mLevel;
+
+	QuadTreeNode(const uint8 Level);
+	QuadTreeNode(const uint8 Level, const TSharedPtr<const QuadTreeNode> Northwest, const TSharedPtr<const QuadTreeNode> Northeast, const TSharedPtr<const QuadTreeNode> Southwest, const TSharedPtr<const QuadTreeNode> Southeast);
+
+	// Returns the value of the bit at X and Y, where X and Y are local coordinates in this block.
+	virtual bool GetBit(const int64 X, const int64 Y) const;
+
+	// Returns a node that is the same as the current node, but with the bit at X and Y set to alive.
+	virtual const TSharedPtr<const QuadTreeNode> SetBit(const int64 X, const int64 Y) const;
+
+	TSharedPtr<const QuadTreeNode> GetChild(ChildNode Node) const;
+private:
+	// Pointers to each of our children, which each represent 1/4 of our space on the board.
+	TStaticArray<TSharedPtr<const QuadTreeNode>, 4> mChildren;
+
+	// Returns the child node that X and Y are contained in. Puts the relative coordinates for X and Y within that child in the out params.
+	virtual ChildNode GetChildAndLocalCoordinates(const int64 X, const int64 Y, int64& LocalXOut, int64& LocalYOut) const;
 };
