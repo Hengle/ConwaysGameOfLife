@@ -4,14 +4,29 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include "QuadTreeNode.h"
+
 #include "GameBoard.generated.h"
 
+
+
+constexpr int sBoardSize = 4;
 /**
  * 
  */
-UCLASS()
+UCLASS(BlueprintType, meta=(BlueprintSpawnableComponent))
 class CONWAYSGAMEOFLIFE_API UGameBoard : public UObject
 {
 	GENERATED_BODY()
+
+public:
+	UFUNCTION(BlueprintCallable)
+	void CreateTree();
+
+	UFUNCTION(BlueprintCallable)
+	void SetBit(const int64 X, const int64 Y);
 	
+private:
+	TSharedPtr<const QuadTreeNode> mRootNode;
 };
+
