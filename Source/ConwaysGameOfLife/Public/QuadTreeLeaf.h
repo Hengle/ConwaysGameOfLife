@@ -9,13 +9,13 @@
 /**
  * 
  */
-class CONWAYSGAMEOFLIFE_API QuadTreeLeaf : QuadTreeNode
+class CONWAYSGAMEOFLIFE_API QuadTreeLeaf : public QuadTreeNode
 {
 public:
 	QuadTreeLeaf(const bool isAlive);
 
 	bool GetBit(const int64 X, const int64 Y) const override;
-	const TSharedPtr<const QuadTreeNode> SetBit(const int64 X, const int64 Y) const override;
+	TSharedPtr<const QuadTreeNode> SetBit(const int64 X, const int64 Y) const override;
 private:
 	const bool mIsAlive;
 

@@ -1,7 +1,23 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+#include "QuadTreeLeaf.h"
 
 #include "QuadTreeNode.h"
+
+TSharedPtr<const QuadTreeNode> QuadTreeNode::CreateEmptyNode(const uint8 NumLevels)
+{
+	if (NumLevels == 0)
+	{
+		return MakeShareable<QuadTreeNode>(new QuadTreeLeaf(false));
+	}
+
+	return MakeShareable<QuadTreeNode>(new QuadTreeNode(NumLevels));
+}
+
+TSharedPtr<const QuadTreeNode> CreateNodeWithSubnodes(const uint8 Level, const TSharedPtr<const QuadTreeNode> Northwest, const TSharedPtr<const QuadTreeNode> Northeast, const TSharedPtr<const QuadTreeNode> Southwest, const TSharedPtr<const QuadTreeNode> Southeast)
+{
+	return MakeShareable<QuadTreeNode>(new QuadTreeNode(Level, Northwest, Northeast, Southwest, Southeast));
+}
 
 QuadTreeNode::QuadTreeNode(const uint8 Level) :
 	mLevel(Level)
@@ -20,12 +36,12 @@ QuadTreeNode::QuadTreeNode(const uint8 Level, const TSharedPtr<const QuadTreeNod
 
 ChildNode QuadTreeNode::GetChildAndLocalCoordinates(const int64 X, const int64 Y, int64& LocalXOut, int64& LocalYOut) const
 {
-	const int64 ChildBlockSize = pow(2, mLevel);
+	const int64 ChildBlockSize = pow(2, mLevel - 1);
 
 	LocalXOut = X;
 	LocalYOut = Y;
 
-	if (X < 0)
+	if (X < ChildBlockSize)
 	{
 		if (Y < ChildBlockSize)
 		{
@@ -70,7 +86,7 @@ bool QuadTreeNode::GetBit(const int64 X, const int64 Y) const
 	return false;
 }
 
-const TSharedPtr<const QuadTreeNode> QuadTreeNode::SetBit(const int64 X, const int64 Y) const
+TSharedPtr<const QuadTreeNode> QuadTreeNode::SetBit(const int64 X, const int64 Y) const
 {
 	int64 ChildLocalX, ChildLocalY;
 	const ChildNode ChildContainingXAndY = GetChildAndLocalCoordinates(X, Y, ChildLocalX, ChildLocalY);
@@ -79,8 +95,10 @@ const TSharedPtr<const QuadTreeNode> QuadTreeNode::SetBit(const int64 X, const i
 	if (!NewChild.IsValid())
 	{
 		// Will want to use our static creation functions here for sure.
-		NewChild = MakeShareable<QuadTreeNode>(new QuadTreeNode(mLevel - 1));
+		NewChild = CreateEmptyNode(mLevel - 1);
 	}
+
+	NewChild = NewChild->SetBit(ChildLocalX, ChildLocalY);
 
 	// Also switch to static creation functions here!
 	switch (ChildContainingXAndY)
@@ -101,4 +119,9 @@ const TSharedPtr<const QuadTreeNode> QuadTreeNode::SetBit(const int64 X, const i
 TSharedPtr<const QuadTreeNode> QuadTreeNode::GetChild(ChildNode Node) const
 {
 	return mChildren[Node];
+}
+
+TSharedPtr<const QuadTreeNode> QuadTreeNode::GetNextGeneration() const
+{
+	return MakeShareable<QuadTreeNode>(nullptr);
 }

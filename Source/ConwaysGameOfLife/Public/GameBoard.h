@@ -10,7 +10,7 @@
 
 
 
-constexpr int sBoardSize = 4;
+constexpr int sBoardSize = 8;
 /**
  * 
  */
@@ -25,6 +25,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SetBit(const int64 X, const int64 Y);
+
+	UFUNCTION(BlueprintCallable)
+	FString GetBoardString() const;
 	
 private:
 	TSharedPtr<const QuadTreeNode> mRootNode;

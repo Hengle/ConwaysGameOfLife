@@ -16,7 +16,7 @@ bool QuadTreeLeaf::GetBit(const int64 X, const int64 Y) const
 	return mIsAlive;
 }
 
-const TSharedPtr<const QuadTreeNode> QuadTreeLeaf::SetBit(const int64 X, const int64 Y) const
+TSharedPtr<const QuadTreeNode> QuadTreeLeaf::SetBit(const int64 X, const int64 Y) const
 {
 	if (X != 0 || Y != 0)
 	{
