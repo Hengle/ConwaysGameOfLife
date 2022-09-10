@@ -1,8 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "QuadTreeLeaf.h"
-
 #include "QuadTreeNode.h"
+#include "QuadTreeLeaf.h"
 
 TSharedPtr<const QuadTreeNode> QuadTreeNode::CreateEmptyNode(const uint8 NumLevels)
 {
@@ -14,9 +13,37 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::CreateEmptyNode(const uint8 NumLeve
 	return MakeShareable<QuadTreeNode>(new QuadTreeNode(NumLevels));
 }
 
-TSharedPtr<const QuadTreeNode> CreateNodeWithSubnodes(const uint8 Level, const TSharedPtr<const QuadTreeNode> Northwest, const TSharedPtr<const QuadTreeNode> Northeast, const TSharedPtr<const QuadTreeNode> Southwest, const TSharedPtr<const QuadTreeNode> Southeast)
+TSharedPtr<const QuadTreeNode> QuadTreeNode::CreateNodeWithSubnodes(const uint8 Level, const TSharedPtr<const QuadTreeNode> Northwest, const TSharedPtr<const QuadTreeNode> Northeast, const TSharedPtr<const QuadTreeNode> Southwest, const TSharedPtr<const QuadTreeNode> Southeast)
 {
 	return MakeShareable<QuadTreeNode>(new QuadTreeNode(Level, Northwest, Northeast, Southwest, Southeast));
+}
+
+TSharedPtr<const QuadTreeLeaf> QuadTreeNode::GetNextGenerationCellFromNeighborhood(uint16 NeighborhoodBitset)
+{
+	if (NeighborhoodBitset == 0)
+	{
+		return MakeShareable<QuadTreeLeaf>(new QuadTreeLeaf(false));
+	}
+
+	const bool IsCurrentCellAlive = (NeighborhoodBitset >> 5) & 0x1;
+
+	const uint16 Bitmask = 0x757;
+	NeighborhoodBitset &= Bitmask;
+
+	uint8 NeighborCount = 0;
+
+	while (NeighborhoodBitset > 0)
+	{
+		++NeighborCount;
+		NeighborhoodBitset &= (NeighborhoodBitset - 1);
+	}
+
+	if (NeighborCount == 3 || (IsCurrentCellAlive && NeighborCount == 2))
+	{
+		return MakeShareable<QuadTreeLeaf>(new QuadTreeLeaf(true));
+	}
+
+	return MakeShareable<QuadTreeLeaf>(new QuadTreeLeaf(false));
 }
 
 QuadTreeNode::QuadTreeNode(const uint8 Level) :
@@ -121,7 +148,50 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::GetChild(ChildNode Node) const
 	return mChildren[Node];
 }
 
+bool QuadTreeNode::IsAnyChildValid() const
+{
+	for (int i = 0; i < ChildNode::kCount; ++i)
+	{
+		if (mChildren[i].IsValid())
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+TSharedPtr<const QuadTreeNode> QuadTreeNode::Run4x4Simulation() const
+{
+	if (mLevel != 2)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("We're calling Run4x4Simulation() in a node that isn't 4x4."));
+	}
+
+	// Create bitmask to store all the neighbors.
+	uint16 Bitmask = 0;
+
+	for (int YIter = 0; YIter < 4; ++YIter)
+	{
+		for (int XIter = 0; XIter < 4; ++XIter)
+		{
+			Bitmask = (Bitmask << 1) + GetBit(XIter, YIter);
+		}
+	}
+
+	return CreateNodeWithSubnodes(mLevel, GetNextGenerationCellFromNeighborhood(Bitmask >> 5), GetNextGenerationCellFromNeighborhood(Bitmask >> 4), GetNextGenerationCellFromNeighborhood(Bitmask >> 1), GetNextGenerationCellFromNeighborhood(Bitmask));
+}
+
 TSharedPtr<const QuadTreeNode> QuadTreeNode::GetNextGeneration() const
 {
-	return MakeShareable<QuadTreeNode>(nullptr);
+	if (!IsAnyChildValid())
+	{
+		return CreateEmptyNode(mLevel - 1);
+	}
+	else if (mLevel == 2)
+	{
+		return Run4x4Simulation();
+	}
+
+	return mChildren[0]->GetNextGeneration();
 }

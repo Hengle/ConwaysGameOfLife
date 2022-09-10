@@ -28,6 +28,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	FString GetBoardString() const;
+
+	UFUNCTION(BlueprintCallable)
+	void SimulateNextGeneration();
 	
 private:
 	TSharedPtr<const QuadTreeNode> mRootNode;

@@ -16,8 +16,19 @@ void UGameBoard::SetBit(const int64 X, const int64 Y)
 	mRootNode = mRootNode->SetBit(X, Y);
 }
 
+void UGameBoard::SimulateNextGeneration()
+{
+	mRootNode = mRootNode->GetNextGeneration();
+}
+
 FString UGameBoard::GetBoardString() const
 {
+	if (!mRootNode.IsValid())
+	{
+		UE_LOG(LogTemp, Error, TEXT("mRootNode on GameBoard is invalid!"));
+		return "ERROR";
+	}
+
 	FString Result = "\n";
 
 	for (int YIter = 0; YIter < sBoardSize; ++YIter)

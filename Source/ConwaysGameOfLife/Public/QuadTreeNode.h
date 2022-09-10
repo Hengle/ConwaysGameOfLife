@@ -4,12 +4,16 @@
 
 #include "CoreMinimal.h"
 
+class QuadTreeLeaf;
+
 enum ChildNode
 {
 	Northwest = 0,
 	Northeast = 1,
 	Southwest = 2,
-	Southeast = 3
+	Southeast = 3,
+
+	kCount = 4
 };
 
 /**
@@ -22,8 +26,7 @@ public:
 
 	static TSharedPtr<const QuadTreeNode> CreateNodeWithSubnodes(const uint8 Level, const TSharedPtr<const QuadTreeNode> Northwest, const TSharedPtr<const QuadTreeNode> Northeast, const TSharedPtr<const QuadTreeNode> Southwest, const TSharedPtr<const QuadTreeNode> Southeast);
 
-	static TSharedPtr<const QuadTreeNode> GetNextGenerationOfCenterCellInBitmask;
-
+	static TSharedPtr<const QuadTreeLeaf> GetNextGenerationCellFromNeighborhood(uint16 NeighborhoodBitset);
 
 public:
 	const uint8 mLevel;
@@ -47,4 +50,9 @@ private:
 
 	// Returns the child node that X and Y are contained in. Puts the relative coordinates for X and Y within that child in the out params.
 	virtual ChildNode GetChildAndLocalCoordinates(const int64 X, const int64 Y, int64& LocalXOut, int64& LocalYOut) const;
+
+	bool IsAnyChildValid() const;
+
+	// Returns a node representing the centered 2x2 interior square of cells if they were advanced one generation.
+	TSharedPtr<const QuadTreeNode> Run4x4Simulation() const;
 };
