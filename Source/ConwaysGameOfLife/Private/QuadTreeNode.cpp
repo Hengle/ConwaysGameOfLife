@@ -17,6 +17,8 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::CreateEmptyNode(const uint8 NumLeve
 
 TSharedPtr<const QuadTreeNode> QuadTreeNode::CreateNodeWithSubnodes(const uint8 Level, const TSharedPtr<const QuadTreeNode> Northwest, const TSharedPtr<const QuadTreeNode> Northeast, const TSharedPtr<const QuadTreeNode> Southwest, const TSharedPtr<const QuadTreeNode> Southeast)
 {
+
+	// Add some warning if sublevels leveles don't match up (should be mLevel -1);
 	if (Level == 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("We're trying to construct a node with subnodes at level 0, this is not supported."));
@@ -234,6 +236,31 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::ConstructCenteredChild() const
 int64 QuadTreeNode::GetBlockDimension() const
 {
 	return pow(2, mLevel);
+}
+
+FString QuadTreeNode::GetNodeString() const
+{
+	FString Result = "\n";
+
+	for (int YIter = 0; YIter < GetBlockDimension(); ++YIter)
+	{
+		for (int XIter = 0; XIter < GetBlockDimension(); ++XIter)
+		{
+			if (GetIsCellAlive(XIter, YIter))
+			{
+				Result += "A ";
+			}
+			else
+			{
+				Result += ". ";
+			}
+		}
+
+		Result += "\n";
+
+	}
+
+	return Result;
 }
 
 TSharedPtr<const QuadTreeNode> QuadTreeNode::ConstructHorizontalCenteredGrandchild(TSharedPtr<const QuadTreeNode> WestChildNode, TSharedPtr<const QuadTreeNode> EastChildNode) const 

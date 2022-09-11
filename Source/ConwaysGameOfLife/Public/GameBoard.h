@@ -9,8 +9,6 @@
 #include "GameBoard.generated.h"
 
 
-
-constexpr int sBoardSize = 8;
 /**
  * 
  */
@@ -20,8 +18,12 @@ class CONWAYSGAMEOFLIFE_API UGameBoard : public UObject
 	GENERATED_BODY()
 
 public:
+	// TODO add error handling for trying to construct a new board when one already exists?
 	UFUNCTION(BlueprintCallable)
-	void CreateTree();
+	void ConstructBoard(int BoardDimension);
+
+	UFUNCTION(BlueprintCallable)
+	void ConstructMaxSizeBoard();
 
 	UFUNCTION(BlueprintCallable)
 	void SetBit(const int64 X, const int64 Y);
@@ -33,6 +35,14 @@ public:
 	void SimulateNextGeneration();
 	
 private:
+	uint64 mBoardDimension;
+
+	uint8 mMaxLevelInTree;
+
 	TSharedPtr<const QuadTreeNode> mRootNode;
+
+	TSharedPtr<const QuadTreeNode> ConstructBoardWithCenteredQuadrant(ChildNode QuadrantToCenter) const;
+
+	void ConstructBoardHelper(uint64 BoardDimension);
 };
 

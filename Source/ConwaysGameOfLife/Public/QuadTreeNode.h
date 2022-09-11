@@ -59,6 +59,9 @@ public:
 
 	// TODO resolve types here?
 	int64 GetBlockDimension() const;
+
+	FString GetNodeString() const;
+
 private:
 	// Pointers to each of our children, which each represent 1/4 of this node's space on the board.
 	TStaticArray<TSharedPtr<const QuadTreeNode>, 4> mChildren;
