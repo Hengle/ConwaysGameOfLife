@@ -14,8 +14,8 @@ class CONWAYSGAMEOFLIFE_API QuadTreeLeaf : public QuadTreeNode
 public:
 	QuadTreeLeaf(const bool isAlive);
 
-	bool GetBit(const int64 X, const int64 Y) const override;
-	TSharedPtr<const QuadTreeNode> SetBit(const int64 X, const int64 Y) const override;
+	bool GetIsCellAlive(const int64 X, const int64 Y) const override;
+	TSharedPtr<const QuadTreeNode> SetCellToAlive(const int64 X, const int64 Y) const override;
 private:
 	const bool mIsAlive;
 

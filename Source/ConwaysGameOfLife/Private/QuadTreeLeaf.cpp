@@ -11,16 +11,16 @@ QuadTreeLeaf::QuadTreeLeaf(const bool isAlive) :
 
 }
 
-bool QuadTreeLeaf::GetBit(const int64 X, const int64 Y) const
+bool QuadTreeLeaf::GetIsCellAlive(const int64 X, const int64 Y) const
 {
 	return mIsAlive;
 }
 
-TSharedPtr<const QuadTreeNode> QuadTreeLeaf::SetBit(const int64 X, const int64 Y) const
+TSharedPtr<const QuadTreeNode> QuadTreeLeaf::SetCellToAlive(const int64 X, const int64 Y) const
 {
 	if (X != 0 || Y != 0)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Some coordinate at the leaf level was nonzero. This should never happen!"));
+		UE_LOG(LogTemp, Warning, TEXT("Attempting to set some nonzero coordinate to alive at the leaf level. This should never happen!"));
 	}
 
 	// TODO: Override with our custom creation when doing canonization.
@@ -30,7 +30,7 @@ TSharedPtr<const QuadTreeNode> QuadTreeLeaf::SetBit(const int64 X, const int64 Y
 
 ChildNode QuadTreeLeaf::GetChildAndLocalCoordinates(const int64 X, const int64 Y, int64& LocalXOut, int64& LocalYOut) const
 {
-	UE_LOG(LogTemp, Error, TEXT("We should never be calling this function on a leaf!"));
+	UE_LOG(LogTemp, Warning, TEXT("We should never be calling GetChildAndLocalCoordinates on a leaf."));
 
 	return ChildNode::Northeast;
 }

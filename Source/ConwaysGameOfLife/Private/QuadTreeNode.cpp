@@ -10,11 +10,18 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::CreateEmptyNode(const uint8 NumLeve
 		return MakeShareable<QuadTreeNode>(new QuadTreeLeaf(false));
 	}
 
-	return MakeShareable<QuadTreeNode>(new QuadTreeNode(NumLevels));
+	TSharedPtr<const QuadTreeNode> EmptyChild = CreateEmptyNode(NumLevels - 1);
+
+	return CreateNodeWithSubnodes(NumLevels, EmptyChild, EmptyChild, EmptyChild, EmptyChild);
 }
 
 TSharedPtr<const QuadTreeNode> QuadTreeNode::CreateNodeWithSubnodes(const uint8 Level, const TSharedPtr<const QuadTreeNode> Northwest, const TSharedPtr<const QuadTreeNode> Northeast, const TSharedPtr<const QuadTreeNode> Southwest, const TSharedPtr<const QuadTreeNode> Southeast)
 {
+	if (Level == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("We're trying to construct a node with subnodes at level 0, this is not supported."));
+	}
+
 	return MakeShareable<QuadTreeNode>(new QuadTreeNode(Level, Northwest, Northeast, Southwest, Southeast));
 }
 
@@ -99,7 +106,7 @@ ChildNode QuadTreeNode::GetChildAndLocalCoordinates(const int64 X, const int64 Y
 	}
 }
 
-bool QuadTreeNode::GetBit(const int64 X, const int64 Y) const
+bool QuadTreeNode::GetIsCellAlive(const int64 X, const int64 Y) const
 {
 	int64 ChildLocalX, ChildLocalY;
 	const ChildNode ChildContainingXAndY = GetChildAndLocalCoordinates(X, Y, ChildLocalX, ChildLocalY);
@@ -107,13 +114,13 @@ bool QuadTreeNode::GetBit(const int64 X, const int64 Y) const
 	const TSharedPtr<const QuadTreeNode> Child = mChildren[ChildContainingXAndY];
 	if (Child.IsValid())
 	{
-		return Child->GetBit(ChildLocalX, ChildLocalY);
+		return Child->GetIsCellAlive(ChildLocalX, ChildLocalY);
 	}
 	
 	return false;
 }
 
-TSharedPtr<const QuadTreeNode> QuadTreeNode::SetBit(const int64 X, const int64 Y) const
+TSharedPtr<const QuadTreeNode> QuadTreeNode::SetCellToAlive(const int64 X, const int64 Y) const
 {
 	int64 ChildLocalX, ChildLocalY;
 	const ChildNode ChildContainingXAndY = GetChildAndLocalCoordinates(X, Y, ChildLocalX, ChildLocalY);
@@ -125,7 +132,7 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::SetBit(const int64 X, const int64 Y
 		NewChild = CreateEmptyNode(mLevel - 1);
 	}
 
-	NewChild = NewChild->SetBit(ChildLocalX, ChildLocalY);
+	NewChild = NewChild->SetCellToAlive(ChildLocalX, ChildLocalY);
 
 	// Also switch to static creation functions here!
 	switch (ChildContainingXAndY)
@@ -163,9 +170,9 @@ bool QuadTreeNode::IsAnyChildValid() const
 
 TSharedPtr<const QuadTreeNode> QuadTreeNode::Run4x4Simulation() const
 {
-	if (mLevel != 2)
+	if (GetBlockDimension() != 4)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("We're calling Run4x4Simulation() in a node that isn't 4x4."));
+		UE_LOG(LogTemp, Warning, TEXT("We're calling Run4x4Simulation() on a node that isn't 4x4."));
 	}
 
 	// Create bitmask to store all the neighbors.
@@ -175,11 +182,11 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::Run4x4Simulation() const
 	{
 		for (int XIter = 0; XIter < 4; ++XIter)
 		{
-			Bitmask = (Bitmask << 1) + GetBit(XIter, YIter);
+			Bitmask = (Bitmask << 1) + GetIsCellAlive(XIter, YIter);
 		}
 	}
 
-	return CreateNodeWithSubnodes(mLevel, GetNextGenerationCellFromNeighborhood(Bitmask >> 5), GetNextGenerationCellFromNeighborhood(Bitmask >> 4), GetNextGenerationCellFromNeighborhood(Bitmask >> 1), GetNextGenerationCellFromNeighborhood(Bitmask));
+	return CreateNodeWithSubnodes(mLevel - 1, GetNextGenerationCellFromNeighborhood(Bitmask >> 5), GetNextGenerationCellFromNeighborhood(Bitmask >> 4), GetNextGenerationCellFromNeighborhood(Bitmask >> 1), GetNextGenerationCellFromNeighborhood(Bitmask));
 }
 
 TSharedPtr<const QuadTreeNode> QuadTreeNode::GetNextGeneration() const
@@ -188,10 +195,94 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::GetNextGeneration() const
 	{
 		return CreateEmptyNode(mLevel - 1);
 	}
-	else if (mLevel == 2)
+	else if (GetBlockDimension() == 4)
 	{
 		return Run4x4Simulation();
 	}
 
-	return mChildren[0]->GetNextGeneration();
+	TSharedPtr<const QuadTreeNode> CenterNorthwest, CenterNorth, CenterNortheast, CenterWest, TrueCenter, CenterEast, CenterSouthwest, CenterSouth, CenterSoutheast;
+
+	CenterNorthwest = GetChild(ChildNode::Northwest)->ConstructCenteredChild();
+	CenterNorth = ConstructHorizontalCenteredGrandchild(GetChild(ChildNode::Northwest), GetChild(ChildNode::Northeast));
+	CenterNortheast = GetChild(ChildNode::Northeast)->ConstructCenteredChild();
+	
+	CenterWest = ConstructVerticalCenteredGrandchild(GetChild(ChildNode::Northwest), GetChild(ChildNode::Southwest));
+	TrueCenter = ConstructCenteredGrandchild();
+	CenterEast = ConstructVerticalCenteredGrandchild(GetChild(ChildNode::Northeast), GetChild(ChildNode::Southeast));
+	
+	CenterSouthwest = GetChild(ChildNode::Southwest)->ConstructCenteredChild();
+	CenterSouth = ConstructHorizontalCenteredGrandchild(GetChild(ChildNode::Southwest), GetChild(ChildNode::Southeast));
+	CenterSoutheast = GetChild(ChildNode::Southeast)->ConstructCenteredChild();
+
+	return CreateNodeWithSubnodes(mLevel - 1,
+		CreateNodeWithSubnodes(mLevel - 1, CenterNorthwest, CenterNorth, CenterWest, TrueCenter)->GetNextGeneration(),
+		CreateNodeWithSubnodes(mLevel - 1, CenterNorth, CenterNortheast, TrueCenter, CenterEast)->GetNextGeneration(),
+		CreateNodeWithSubnodes(mLevel - 1, CenterWest, TrueCenter, CenterSouthwest, CenterSouth)->GetNextGeneration(),
+		CreateNodeWithSubnodes(mLevel - 1, TrueCenter, CenterEast, CenterSouth, CenterSoutheast)->GetNextGeneration());
+}
+
+TSharedPtr<const QuadTreeNode> QuadTreeNode::ConstructCenteredChild() const
+{
+	// Construct a node at (mLevel - 1) that consists of the cells in the center of this node. 
+	return CreateNodeWithSubnodes(mLevel - 1,
+		GetChild(ChildNode::Northwest)->GetChild(ChildNode::Southeast),
+		GetChild(ChildNode::Northeast)->GetChild(ChildNode::Southwest),
+		GetChild(ChildNode::Southwest)->GetChild(ChildNode::Northeast),
+		GetChild(ChildNode::Southeast)->GetChild(ChildNode::Northwest));
+}
+
+int64 QuadTreeNode::GetBlockDimension() const
+{
+	return pow(2, mLevel);
+}
+
+TSharedPtr<const QuadTreeNode> QuadTreeNode::ConstructHorizontalCenteredGrandchild(TSharedPtr<const QuadTreeNode> WestChildNode, TSharedPtr<const QuadTreeNode> EastChildNode) const 
+{
+	if (mLevel < 3)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Attempting to construct the grandchild of a node with mLevel < 3. We do not have adequate data to do so."));
+	}
+
+	TSharedPtr<const QuadTreeNode> NorthwestSubnode, NortheastSubnode, SouthwestSubnode, SoutheastSubnode;
+
+	NorthwestSubnode = WestChildNode->GetChild(ChildNode::Northeast)->GetChild(ChildNode::Southeast);
+	NortheastSubnode = EastChildNode->GetChild(ChildNode::Northwest)->GetChild(ChildNode::Southwest);
+	SouthwestSubnode = WestChildNode->GetChild(ChildNode::Southeast)->GetChild(ChildNode::Northeast);
+	SoutheastSubnode = EastChildNode->GetChild(ChildNode::Southwest)->GetChild(ChildNode::Northwest);
+
+	return CreateNodeWithSubnodes(mLevel - 2, NorthwestSubnode, NortheastSubnode, SouthwestSubnode, SoutheastSubnode);
+}
+
+TSharedPtr<const QuadTreeNode> QuadTreeNode::ConstructVerticalCenteredGrandchild(TSharedPtr<const QuadTreeNode> NorthChildNode, TSharedPtr<const QuadTreeNode> SouthChildNode) const
+{
+	if (mLevel < 3)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Attempting to construct the grandchild of a node with mLevel < 3. We do not have adequate data to do so."));
+	}
+
+	TSharedPtr<const QuadTreeNode> NorthwestSubnode, NortheastSubnode, SouthwestSubnode, SoutheastSubnode;
+
+	NorthwestSubnode = NorthChildNode->GetChild(ChildNode::Southwest)->GetChild(ChildNode::Southeast);
+	NortheastSubnode = NorthChildNode->GetChild(ChildNode::Southeast)->GetChild(ChildNode::Southwest);
+	SouthwestSubnode = SouthChildNode->GetChild(ChildNode::Northwest)->GetChild(ChildNode::Northeast);
+	SoutheastSubnode = SouthChildNode->GetChild(ChildNode::Northeast)->GetChild(ChildNode::Northwest);
+
+	return CreateNodeWithSubnodes(mLevel - 2, NorthwestSubnode, NortheastSubnode, SouthwestSubnode, SoutheastSubnode);
+}
+
+TSharedPtr<const QuadTreeNode> QuadTreeNode::ConstructCenteredGrandchild() const
+{
+	if (mLevel < 3)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Attempting to construct the grandchild of a node with mLevel < 3. We do not have adequate data to do so."));
+	}
+
+	TSharedPtr<const QuadTreeNode> NorthwestSubnode, NortheastSubnode, SouthwestSubnode, SoutheastSubnode;
+
+	NorthwestSubnode = GetChild(ChildNode::Northwest)->GetChild(ChildNode::Southeast)->GetChild(ChildNode::Southeast);
+	NortheastSubnode = GetChild(ChildNode::Northeast)->GetChild(ChildNode::Southwest)->GetChild(ChildNode::Southwest);
+	SouthwestSubnode = GetChild(ChildNode::Southwest)->GetChild(ChildNode::Northeast)->GetChild(ChildNode::Northeast);
+	SoutheastSubnode = GetChild(ChildNode::Southeast)->GetChild(ChildNode::Northwest)->GetChild(ChildNode::Northwest);
+
+	return CreateNodeWithSubnodes(mLevel - 2, NorthwestSubnode, NortheastSubnode, SouthwestSubnode, SoutheastSubnode);
 }
