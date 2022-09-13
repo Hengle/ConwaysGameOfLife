@@ -102,28 +102,28 @@ TSharedPtr<const QuadTreeNode> UGameBoard::ConstructBoardWithCenteredQuadrant(Ch
 	TSharedPtr<const QuadTreeNode> OpposingDiagonal = mRootNode->GetChild(GetOpposingDiagonalQuadrant(QuadrantToCenter));
 
 	const TSharedPtr<const QuadTreeNode> NewNorthwest = QuadTreeNode::CreateNodeWithSubnodes(mMaxLevelInTree - 1,
-		OpposingDiagonal->GetChild(ChildNode::Southeast),
-		OpposingVertical->GetChild(ChildNode::Southwest),
-		OpposingHorizontal->GetChild(ChildNode::Northeast),
-		MainQuadrant->GetChild(ChildNode::Northwest));
+		OpposingDiagonal->Southeast(),
+		OpposingVertical->Southwest(),
+		OpposingHorizontal->Northeast(),
+		MainQuadrant->Northwest());
 
 	const TSharedPtr<const QuadTreeNode> NewNortheast = QuadTreeNode::CreateNodeWithSubnodes(mMaxLevelInTree - 1,
-		OpposingVertical->GetChild(ChildNode::Southeast),
-		OpposingDiagonal->GetChild(ChildNode::Southwest),
-		MainQuadrant->GetChild(ChildNode::Northeast),
-		OpposingHorizontal->GetChild(ChildNode::Northwest));
+		OpposingVertical->Southeast(),
+		OpposingDiagonal->Southwest(),
+		MainQuadrant->Northeast(),
+		OpposingHorizontal->Northwest());
 
 	const TSharedPtr<const QuadTreeNode> NewSouthwest = QuadTreeNode::CreateNodeWithSubnodes(mMaxLevelInTree - 1,
-		OpposingHorizontal->GetChild(ChildNode::Southeast),
-		MainQuadrant->GetChild(ChildNode::Southwest),
-		OpposingDiagonal->GetChild(ChildNode::Northeast),
-		OpposingVertical->GetChild(ChildNode::Northwest));
+		OpposingHorizontal->Southeast(),
+		MainQuadrant->Southwest(),
+		OpposingDiagonal->Northeast(),
+		OpposingVertical->Northwest());
 
 	const TSharedPtr<const QuadTreeNode> NewSoutheast = QuadTreeNode::CreateNodeWithSubnodes(mMaxLevelInTree - 1,
-		MainQuadrant->GetChild(ChildNode::Southeast),
-		OpposingHorizontal->GetChild(ChildNode::Southwest),
-		OpposingVertical->GetChild(ChildNode::Northeast),
-		OpposingDiagonal->GetChild(ChildNode::Northwest));
+		MainQuadrant->Southeast(),
+		OpposingHorizontal->Southwest(),
+		OpposingVertical->Northeast(),
+		OpposingDiagonal->Northwest());
 
 	return QuadTreeNode::CreateNodeWithSubnodes(mMaxLevelInTree, NewNorthwest, NewNortheast, NewSouthwest, NewSoutheast);
 }

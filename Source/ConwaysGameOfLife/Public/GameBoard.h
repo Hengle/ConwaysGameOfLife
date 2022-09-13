@@ -35,14 +35,19 @@ public:
 	void SimulateNextGeneration();
 	
 private:
+	// The dimensions of the board on one side. Must be a power of two. Boards are always square.
 	uint64 mBoardDimension;
 
+	// The level of the root node in the tree.
 	uint8 mMaxLevelInTree;
 
+	// Root node of the quadtree representing our current board.
 	TSharedPtr<const QuadTreeNode> mRootNode;
 
+	// Constructs a new board with the provided quadrant in the center. Will have dimension (mBoardDimension / 2).
 	TSharedPtr<const QuadTreeNode> ConstructBoardWithCenteredQuadrant(ChildNode QuadrantToCenter) const;
 
+	// Helper used to construct an empty board with size BoardDimension.
 	void ConstructBoardHelper(uint64 BoardDimension);
 };
 

@@ -62,6 +62,16 @@ public:
 
 	FString GetNodeString() const;
 
+	TSharedPtr<const QuadTreeNode> Northwest() const;
+
+	TSharedPtr<const QuadTreeNode> Northeast() const;
+
+	TSharedPtr<const QuadTreeNode> Southwest() const;
+
+	TSharedPtr<const QuadTreeNode> Southeast() const;
+
+	bool IsLeaf() const;
+
 private:
 	// Pointers to each of our children, which each represent 1/4 of this node's space on the board.
 	TStaticArray<TSharedPtr<const QuadTreeNode>, 4> mChildren;
