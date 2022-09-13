@@ -19,6 +19,7 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::CreateNodeWithSubnodes(const uint8 
 {
 
 	// Add some warning if sublevels leveles don't match up (should be mLevel -1);
+	// TODO check validifty of children here,
 	if (Level == 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("We're trying to construct a node with subnodes at level 0, this is not supported."));
@@ -68,6 +69,8 @@ QuadTreeNode::QuadTreeNode(const uint8 Level, const TSharedPtr<const QuadTreeNod
 	mChildren[ChildNode::Northeast] = Northeast;
 	mChildren[ChildNode::Southwest] = Southwest;
 	mChildren[ChildNode::Southeast] = Southeast;
+
+	mIsAlive = (Northwest->IsAlive() || Northeast->IsAlive() || Southwest->IsAlive() || Southeast->IsAlive());
 }
 
 ChildNode QuadTreeNode::GetChildAndLocalCoordinates(const int64 X, const int64 Y, int64& LocalXOut, int64& LocalYOut) const
@@ -195,7 +198,7 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::Run4x4Simulation() const
 
 TSharedPtr<const QuadTreeNode> QuadTreeNode::GetNextGeneration() const
 {
-	if (!IsAnyChildValid())
+	if (!IsAlive())
 	{
 		return CreateEmptyNode(mLevel - 1);
 	}
@@ -235,7 +238,7 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::ConstructCenteredChild() const
 		Southeast()->Northwest());
 }
 
-int64 QuadTreeNode::GetBlockDimension() const
+uint64 QuadTreeNode::GetBlockDimension() const
 {
 	return pow(2, mLevel);
 }
@@ -291,6 +294,29 @@ bool QuadTreeNode::IsLeaf() const
 {
 	// All leaves are at level 0, and all nodes at level 0 are leaves.
 	return mLevel == 0;
+}
+
+bool QuadTreeNode::IsAlive() const
+{
+	return mIsAlive;
+}
+
+TSharedPtr<const QuadTreeNode> QuadTreeNode::GetBlockOfDimensionContainingCoordinate(const uint64 DesiredDimension, const int64 X, const int64 Y) const
+{
+	if (GetBlockDimension() == DesiredDimension)
+	{
+		return CreateNodeWithSubnodes(mLevel, Northwest(), Northeast(), Southwest(), Southeast());
+	}
+	else if (GetBlockDimension() < DesiredDimension)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Could not find any block with the desired dimension. DesiredDimension must be a power of two to find a block successfully."));
+		return nullptr;
+	}
+
+	int64 ChildLocalX, ChildLocalY;
+	const ChildNode ChildContainingXAndY = GetChildAndLocalCoordinates(X, Y, ChildLocalX, ChildLocalY);
+
+	return GetChild(ChildContainingXAndY)->GetBlockOfDimensionContainingCoordinate(DesiredDimension, ChildLocalX, ChildLocalY);
 }
 
 TSharedPtr<const QuadTreeNode> QuadTreeNode::ConstructHorizontalCenteredGrandchild(TSharedPtr<const QuadTreeNode> WestChildNode, TSharedPtr<const QuadTreeNode> EastChildNode) const 

@@ -33,6 +33,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SimulateNextGeneration();
+
+	UFUNCTION(BlueprintCallable)
+	FString GetBoardStringForBlockOfDimensionContainingCoordinate(int DesiredDimension, int64 X, int64 Y) const;
 	
 private:
 	// The dimensions of the board on one side. Must be a power of two. Boards are always square.

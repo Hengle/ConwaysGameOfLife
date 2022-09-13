@@ -143,6 +143,13 @@ void UGameBoard::SimulateNextGeneration()
 	mRootNode = QuadTreeNode::CreateNodeWithSubnodes(mMaxLevelInTree, SolvedNorthwest, SolvedNortheast, SolvedSouthwest, SolvedSoutheast);
 }
 
+FString UGameBoard::GetBoardStringForBlockOfDimensionContainingCoordinate(int DesiredDimension, int64 X, int64 Y) const
+{
+	TSharedPtr<const QuadTreeNode> FoundBlock = mRootNode->GetBlockOfDimensionContainingCoordinate((uint64) DesiredDimension, X, Y);
+
+	return FoundBlock->GetNodeString();
+}
+
 FString UGameBoard::GetBoardString() const
 {
 	return mRootNode->GetNodeString();

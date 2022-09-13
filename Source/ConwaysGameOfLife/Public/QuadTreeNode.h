@@ -57,8 +57,7 @@ public:
 	// TODO override this in the child.
 	virtual TSharedPtr<const QuadTreeNode> ConstructCenteredChild() const;
 
-	// TODO resolve types here?
-	int64 GetBlockDimension() const;
+	uint64 GetBlockDimension() const;
 
 	FString GetNodeString() const;
 
@@ -72,9 +71,18 @@ public:
 
 	bool IsLeaf() const;
 
+	bool IsAlive() const;
+
+	TSharedPtr<const QuadTreeNode> GetBlockOfDimensionContainingCoordinate(const uint64 DesiredDimension, const int64 X, const int64 Y) const;
+
+protected:
+	bool mIsAlive;
+
 private:
 	// Pointers to each of our children, which each represent 1/4 of this node's space on the board.
 	TStaticArray<TSharedPtr<const QuadTreeNode>, 4> mChildren;
+
+
 
 	// Returns the child node that X and Y are contained in. Puts the relative coordinates for X and Y within that child in the out params.
 	virtual ChildNode GetChildAndLocalCoordinates(const int64 X, const int64 Y, int64& LocalXOut, int64& LocalYOut) const;

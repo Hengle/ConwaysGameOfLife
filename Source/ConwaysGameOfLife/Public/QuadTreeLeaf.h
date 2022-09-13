@@ -17,7 +17,6 @@ public:
 	bool GetIsCellAlive(const int64 X, const int64 Y) const override;
 	TSharedPtr<const QuadTreeNode> SetCellToAlive(const int64 X, const int64 Y) const override;
 private:
-	const bool mIsAlive;
 
 	ChildNode GetChildAndLocalCoordinates(const int64 X, const int64 Y, int64& LocalXOut, int64& LocalYOut) const override;
 };

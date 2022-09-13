@@ -5,10 +5,9 @@
 
 // Basic constructor. A leaf's level will always be 0.
 QuadTreeLeaf::QuadTreeLeaf(const bool isAlive) :
-	QuadTreeNode(0),
-	mIsAlive(isAlive)
+	QuadTreeNode(0)
 {
-
+	mIsAlive = isAlive;
 }
 
 bool QuadTreeLeaf::GetIsCellAlive(const int64 X, const int64 Y) const
