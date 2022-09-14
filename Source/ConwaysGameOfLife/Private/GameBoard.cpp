@@ -159,7 +159,23 @@ FString UGameBoard::GetBoardStringForBlockOfDimensionContainingCoordinate(int De
 
 void UGameBoard::GetLocalLiveCellCoordinatesFromFoundBlock(int DesiredDimensionOfBlock, const FBoardCoordinate CoordinateToFind, TArray<FBoardCoordinate>& ResultsOut) const
 {
+	TSharedPtr<const QuadTreeNode> FoundBlock = mRootNode->GetBlockOfDimensionContainingCoordinate((uint64)DesiredDimensionOfBlock, CoordinateToFind.mX, CoordinateToFind.mY);
 
+	const int HalfBlockSize = DesiredDimensionOfBlock / 2;
+
+	for (int YIter = -HalfBlockSize; YIter < HalfBlockSize; ++YIter)
+	{
+		for (int XIter = -HalfBlockSize; XIter < HalfBlockSize; ++XIter)
+		{
+			if (FoundBlock->GetIsCellAlive(XIter, YIter))
+			{
+				FBoardCoordinate Coordinate;
+				Coordinate.SetXAndY(XIter, YIter);
+				
+				ResultsOut.Add(Coordinate);
+			}
+		}
+	}
 }
 
 FString UGameBoard::GetBoardString() const

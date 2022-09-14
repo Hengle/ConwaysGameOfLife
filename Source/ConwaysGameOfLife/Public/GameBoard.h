@@ -5,30 +5,9 @@
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
 #include "QuadTreeNode.h"
+#include "BoardUtilities.h"
 
 #include "GameBoard.generated.h"
-
-/**
- *
- */
-USTRUCT(BlueprintType)
-struct FBoardCoordinate
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(BlueprintReadWrite)
-	int64 mX = 0;
-
-	UPROPERTY(BlueprintReadWrite)
-	int64 mY = 0;
-
-	void SetXAndY(int64 X, int64 Y)
-	{
-		mX = X;
-		mY = Y;
-	}
-};
 
 /**
  * 
@@ -82,10 +61,7 @@ private:
 
 	ChildNode GetOpposingDiagonalQuadrant(ChildNode Child) const;
 
-
 	// Constructs a new board with the provided quadrant in the center. Will have dimension (mBoardDimension / 2).
 	TSharedPtr<const QuadTreeNode> ConstructBoardWithCenteredQuadrant(ChildNode QuadrantToCenter) const;
-
-
 };
 
