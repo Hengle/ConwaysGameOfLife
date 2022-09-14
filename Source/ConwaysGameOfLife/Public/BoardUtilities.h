@@ -26,6 +26,12 @@ public:
 		mX = X;
 		mY = Y;
 	}
+
+	bool operator==(const FBoardCoordinate& Other) const
+	{
+		return (mX == Other.mX) && (mY == Other.mY);
+	}
+
 };
 
 /**
@@ -35,5 +41,12 @@ UCLASS()
 class CONWAYSGAMEOFLIFE_API UBoardUtilities : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
+
+public:
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	static void ParseStringIntoCoordinates(FString SourceString, TArray<FBoardCoordinate>& ResultsOut);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	static int64 ParseStringToInt64(FString SourceString);
 	
 };
