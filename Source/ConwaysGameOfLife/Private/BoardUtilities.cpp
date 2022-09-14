@@ -1,4 +1,5 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Conway's Game Of Life in Unreal
+// Ilana Franklin, 2022
 
 
 #include "BoardUtilities.h"

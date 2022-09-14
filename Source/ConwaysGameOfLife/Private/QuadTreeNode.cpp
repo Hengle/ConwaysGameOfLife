@@ -1,5 +1,5 @@
-// TODO
-// Fill out your copyright notice in the Description page of Project Settings.
+// Conway's Game Of Life in Unreal
+// Ilana Franklin, 2022
 
 #include "QuadTreeNode.h"
 
@@ -394,11 +394,6 @@ bool QuadTreeNode::IsLeaf() const
 bool QuadTreeNode::IsAlive() const
 {
 	return mIsAlive;
-}
-
-bool QuadTreeNode::IsValid() const
-{
-	return mLevel >= 0;
 }
 
 TSharedPtr<const QuadTreeNode> QuadTreeNode::GetBlockOfDimensionContainingCoordinate(const uint64 DesiredDimension, const int64 X, const int64 Y) const

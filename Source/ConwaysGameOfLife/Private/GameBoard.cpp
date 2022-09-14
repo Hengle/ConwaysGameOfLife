@@ -1,5 +1,5 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
+// Conway's Game Of Life in Unreal
+// Ilana Franklin, 2022
 
 #include "GameBoard.h"
 
@@ -18,7 +18,7 @@ UGameBoard* UGameBoard::InitializeBoardWithDimension(int BoardDimension)
 
 UGameBoard* UGameBoard::InitializeMaxSizeBoard()
 {
-	return InitializeBoardHelper(UINT64_MAX);
+	return InitializeBoardHelper(kMaxSizeBoard);
 }
 
 UGameBoard* UGameBoard::InitializeBoardHelper(uint64 BoardDimension)
@@ -36,7 +36,7 @@ UGameBoard* UGameBoard::InitializeBoardHelper(uint64 BoardDimension)
 	return nullptr;
 }
 
-void UGameBoard::SetBit(const FBoardCoordinate Coordinate)
+void UGameBoard::SetCellToAlive(const FBoardCoordinate Coordinate)
 {
 	mRootNode = mRootNode->SetCellToAlive(Coordinate.mX, Coordinate.mY);
 }
@@ -163,6 +163,7 @@ void UGameBoard::GetLocalLiveCellCoordinatesFromFoundBlock(int DesiredDimensionO
 
 	const int HalfBlockSize = DesiredDimensionOfBlock / 2;
 
+	// Go through the block and look for live cells.
 	for (int YIter = -HalfBlockSize; YIter < HalfBlockSize; ++YIter)
 	{
 		for (int XIter = -HalfBlockSize; XIter < HalfBlockSize; ++XIter)
