@@ -34,6 +34,8 @@ public:
 	QuadTreeNode(const bool IsAlive);
 	QuadTreeNode(const uint8 Level, const TSharedPtr<const QuadTreeNode> Northwest, const TSharedPtr<const QuadTreeNode> Northeast, const TSharedPtr<const QuadTreeNode> Southwest, const TSharedPtr<const QuadTreeNode> Southeast);
 
+	bool operator==(const QuadTreeNode& Other) const;
+
 	// Returns the status of the cell at X and Y, where X and Y are local coordinates in this block.
 	bool GetIsCellAlive(const int64 X, const int64 Y) const;
 
@@ -42,12 +44,12 @@ public:
 
 	TSharedPtr<const QuadTreeNode> GetChild(ChildNode Node) const;
 
-	// Returns a node representing how a centered mLevel-1 size node would look if advanced one generation.
+	// Returns a node representing how a centered GetNodeDimension()xGetNodeDimension() portion of this node would look if advanced one generation.
 	TSharedPtr<const QuadTreeNode> GetNextGeneration() const;
 
 	TSharedPtr<const QuadTreeNode> ConstructCenteredChild() const;
 
-	uint64 GetBlockDimension() const;
+	uint64 GetNodeDimension() const;
 
 	FString GetNodeString() const;
 
@@ -83,3 +85,5 @@ private:
 
 	TSharedPtr<const QuadTreeNode> ConstructCenteredGrandchild() const;
 };
+
+FORCEINLINE uint32 GetTypeHash(const QuadTreeNode& NodeToHash);

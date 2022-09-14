@@ -54,9 +54,11 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::GetNextGenerationCellFromNeighborho
 
 	const bool IsCurrentCellAlive = (NeighborhoodBitset >> 5) & 0x1;
 
+	// Mask off bits outside the neighborhood, and the cell itself.
 	const uint16 Bitmask = 0x757;
 	NeighborhoodBitset &= Bitmask;
 
+	// Count the number of 1s in the neighborhood bitset. This represents our live neighbors.
 	uint8 NeighborCount = 0;
 
 	while (NeighborhoodBitset > 0)
@@ -65,6 +67,7 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::GetNextGenerationCellFromNeighborho
 		NeighborhoodBitset &= (NeighborhoodBitset - 1);
 	}
 
+	// Apply our Game of Life rules.
 	if (NeighborCount == 3 || (IsCurrentCellAlive && NeighborCount == 2))
 	{
 		return CreateLeaf(true);
@@ -88,7 +91,18 @@ QuadTreeNode::QuadTreeNode(const uint8 Level, const TSharedPtr<const QuadTreeNod
 	mChildren[ChildNode::Southwest] = Southwest;
 	mChildren[ChildNode::Southeast] = Southeast;
 
+	// This node is alive if at least one cell inside it is alive.
 	mIsAlive = (Northwest->IsAlive() || Northeast->IsAlive() || Southwest->IsAlive() || Southeast->IsAlive());
+}
+
+bool QuadTreeNode::operator==(const QuadTreeNode& Other) const
+{
+	return (mLevel == Other.mLevel) &&
+		(mIsAlive == mIsAlive) &&
+		(Northwest() == Other.Northwest()) &&
+		(Northeast() == Other.Northeast()) &&
+		(Southwest() == Other.Southwest()) &&
+		(Southeast() == Other.Southeast());
 }
 
 ChildNode QuadTreeNode::GetChildAndLocalCoordinates(const int64 X, const int64 Y, int64& LocalXOut, int64& LocalYOut) const
@@ -101,7 +115,7 @@ ChildNode QuadTreeNode::GetChildAndLocalCoordinates(const int64 X, const int64 Y
 	}
 #endif
 
-	const int64 HalfChildSize = GetBlockDimension() / 4;
+	const int64 HalfChildSize = GetNodeDimension() / 4;
 
 	if (X < 0)
 	{
@@ -182,6 +196,7 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::SetCellToAlive(const int64 X, const
 
 	NewChild = NewChild->SetCellToAlive(ChildLocalX, ChildLocalY);
 
+	// Depending on which child contains the cell we'd like to set, return the appropriate new tree with a new child. 
 	switch (ChildContainingXAndY)
 	{
 	case ChildNode::Northwest:
@@ -212,7 +227,7 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::GetChild(ChildNode Node) const
 TSharedPtr<const QuadTreeNode> QuadTreeNode::Run4x4Simulation() const
 {
 #if !UE_BUILD_SHIPPING
-	if (GetBlockDimension() != 4)
+	if (GetNodeDimension() != 4)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("We're calling Run4x4Simulation() on a node that isn't 4x4."));
 		return nullptr;
@@ -243,7 +258,7 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::GetNextGeneration() const
 		// If there are no live cells in this node, we can just return an empty tree.
 		return CreateEmptyNode(mLevel - 1);
 	}
-	else if (GetBlockDimension() == 4)
+	else if (GetNodeDimension() == 4)
 	{
 		// Once we've reached a 4x4 block, go to our specialized simulation.
 		return Run4x4Simulation();
@@ -251,10 +266,10 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::GetNextGeneration() const
 
 	/*
 	 * Our goal is to return a node at level (mLevel-1) which represents how a centered child node would look if advanced one generation. 
-	 * We're going to construct 9 interior nodes, each at level (mLevel-2). These nodes surround our intended centered result node.
+	 * We're going to construct 9 interior nodes, each at level (mLevel-2). These nodes surround and overlap with our intended centered result node.
 	 * Using the 9 interior nodes we can construct four new trees, each of which have one quadrant of the intended centered result node in their own center.
 	 * Advancing each of these trees by one generation will give us one quadrant of our intended centered result node.
-	 * We can then combine these for solved quadrants to form our result node.
+	 * We can then combine these four solved quadrants to form our result node.
 	 */
 	TSharedPtr<const QuadTreeNode> CenterNorthwest, CenterNorth, CenterNortheast, CenterWest, TrueCenter, CenterEast, CenterSouthwest, CenterSouth, CenterSoutheast;
 
@@ -270,13 +285,33 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::GetNextGeneration() const
 	CenterSouth = ConstructHorizontalCenteredGrandchild(Southwest(), Southeast());
 	CenterSoutheast = Southeast()->ConstructCenteredChild();
 
+	// Construct our four nodes that will give us each of our four quadrants for the intended centered result node and solve for them in parallel. 
+	TSharedPtr<const QuadTreeNode> NewNorthwest, NewNortheast, NewSouthwest, NewSoutheast;
 
-	// Construct the nodes, solve for each quadrant, then recombine to get our result.
-	return CreateNodeWithSubnodes(mLevel - 1,
-		CreateNodeWithSubnodes(mLevel - 1, CenterNorthwest, CenterNorth, CenterWest, TrueCenter)->GetNextGeneration(),
-		CreateNodeWithSubnodes(mLevel - 1, CenterNorth, CenterNortheast, TrueCenter, CenterEast)->GetNextGeneration(),
-		CreateNodeWithSubnodes(mLevel - 1, CenterWest, TrueCenter, CenterSouthwest, CenterSouth)->GetNextGeneration(),
-		CreateNodeWithSubnodes(mLevel - 1, TrueCenter, CenterEast, CenterSouth, CenterSoutheast)->GetNextGeneration());
+	ParallelFor(ChildNode::kCount, [&](int32 QuadrantIndex)
+		{
+			switch (QuadrantIndex) 
+			{
+			case ChildNode::Northwest:
+				NewNorthwest = CreateNodeWithSubnodes(mLevel - 1, CenterNorthwest, CenterNorth, CenterWest, TrueCenter)->GetNextGeneration();
+				break;
+			case ChildNode::Northeast:
+				NewNortheast = CreateNodeWithSubnodes(mLevel - 1, CenterNorth, CenterNortheast, TrueCenter, CenterEast)->GetNextGeneration();
+				break;
+			case ChildNode::Southwest:
+				NewSouthwest = CreateNodeWithSubnodes(mLevel - 1, CenterWest, TrueCenter, CenterSouthwest, CenterSouth)->GetNextGeneration();
+				break;
+			case ChildNode::Southeast:
+				NewSoutheast = CreateNodeWithSubnodes(mLevel - 1, TrueCenter, CenterEast, CenterSouth, CenterSoutheast)->GetNextGeneration();
+				break;
+			default:
+				UE_LOG(LogTemp, Warning, TEXT("Reached some unknown case during ParallelFor in GetNextGeneration."))
+			}
+		});
+
+
+	// Recombine to get our result.
+	return CreateNodeWithSubnodes(mLevel - 1, NewNorthwest, NewNortheast, NewSouthwest, NewSoutheast);
 }
 
 TSharedPtr<const QuadTreeNode> QuadTreeNode::ConstructCenteredChild() const
@@ -289,7 +324,7 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::ConstructCenteredChild() const
 		Southeast()->Northwest());
 }
 
-uint64 QuadTreeNode::GetBlockDimension() const
+uint64 QuadTreeNode::GetNodeDimension() const
 {
 	return pow(2, mLevel);
 }
@@ -298,7 +333,7 @@ FString QuadTreeNode::GetNodeString() const
 {
 	FString Result = "\n";
 
-	int64 HalfSize = GetBlockDimension() / 2;
+	int64 HalfSize = GetNodeDimension() / 2;
 
 	for (int YIter = HalfSize - 1; YIter >= -HalfSize; --YIter)
 	{
@@ -354,11 +389,11 @@ bool QuadTreeNode::IsAlive() const
 
 TSharedPtr<const QuadTreeNode> QuadTreeNode::GetBlockOfDimensionContainingCoordinate(const uint64 DesiredDimension, const int64 X, const int64 Y) const
 {
-	if (GetBlockDimension() == DesiredDimension)
+	if (GetNodeDimension() == DesiredDimension)
 	{
 		return CreateNodeWithSubnodes(mLevel, Northwest(), Northeast(), Southwest(), Southeast());
 	}
-	else if (GetBlockDimension() < DesiredDimension)
+	else if (GetNodeDimension() < DesiredDimension)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Could not find any block with the desired dimension. DesiredDimension must be a power of two to find a block successfully."));
 		return nullptr;
@@ -425,4 +460,9 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::ConstructCenteredGrandchild() const
 	SoutheastSubnode = Southeast()->Northwest()->Northwest();
 
 	return CreateNodeWithSubnodes(mLevel - 2, NorthwestSubnode, NortheastSubnode, SouthwestSubnode, SoutheastSubnode);
+}
+
+FORCEINLINE uint32 GetTypeHash(const QuadTreeNode& NodeToHash)
+{
+	return 0;
 }
