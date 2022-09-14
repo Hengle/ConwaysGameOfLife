@@ -93,5 +93,3 @@ private:
 
 	TSharedPtr<const QuadTreeNode> ConstructCenteredGrandchild() const;
 };
-
-FORCEINLINE uint32 GetTypeHash(const QuadTreeNode& NodeToHash);

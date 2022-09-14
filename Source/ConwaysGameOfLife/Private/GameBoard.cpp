@@ -3,42 +3,45 @@
 
 #include "GameBoard.h"
 
-void UGameBoard::ConstructBoard(int BoardDimension)
+UGameBoard* UGameBoard::InitializeBoardWithDimension(int BoardDimension)
 {
-	// TODO Also check for some board minsize!
-	if (BoardDimension < 0)
+	constexpr int MinBoardSize = 8;
+
+	if (BoardDimension < MinBoardSize)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Attempting to call ConstructBoard with a BoardDimension that is too small. Board Dimension must be at least TODO"));
-		return;
+		UE_LOG(LogTemp, Error, TEXT("Attempting to call InitializeBoardWithDimension with a BoardDimension that is too small. Board Dimension must be at least TODO"));
+		return nullptr;
 	}
 
-	ConstructBoardHelper(BoardDimension);
+	return InitializeBoardHelper(BoardDimension);
 }
 
-void UGameBoard::ConstructMaxSizeBoard()
+UGameBoard* UGameBoard::InitializeMaxSizeBoard()
 {
-	ConstructBoardHelper(UINT64_MAX);
+	return InitializeBoardHelper(UINT64_MAX);
 }
 
-void UGameBoard::ConstructBoardHelper(uint64 BoardDimension)
+UGameBoard* UGameBoard::InitializeBoardHelper(uint64 BoardDimension)
 {
-	if (mRootNode.IsValid())
+	if (UGameBoard* ResultPointer = NewObject<UGameBoard>())
 	{
-		UE_LOG(LogTemp, Error, TEXT("Calling ConstructBoard on a GameBoard that already contains data. This will erase the old GameBoard state."));
+		ResultPointer->mBoardDimension = BoardDimension;
+		ResultPointer->mMaxLevelInTree = log2(BoardDimension);
+
+		ResultPointer->mRootNode = QuadTreeNode::CreateEmptyNode(ResultPointer->mMaxLevelInTree);
+
+		return ResultPointer;
 	}
 
-	mBoardDimension = BoardDimension;
-	mMaxLevelInTree = log2(mBoardDimension);
-
-	mRootNode = QuadTreeNode::CreateEmptyNode(mMaxLevelInTree);
+	return nullptr;
 }
 
-void UGameBoard::SetBit(const int64 X, const int64 Y)
+void UGameBoard::SetBit(const FBoardCoordinate Coordinate)
 {
-	mRootNode = mRootNode->SetCellToAlive(X, Y);
+	mRootNode = mRootNode->SetCellToAlive(Coordinate.mX, Coordinate.mY);
 }
 
-ChildNode GetOpposingVerticalQuadrant(ChildNode Child)
+ChildNode UGameBoard::GetOpposingVerticalQuadrant(ChildNode Child) const
 {
 	switch (Child)
 	{
@@ -50,15 +53,14 @@ ChildNode GetOpposingVerticalQuadrant(ChildNode Child)
 		return ChildNode::Northwest;
 	case ChildNode::Southeast:
 		return ChildNode::Northeast;
+	default:
+		UE_LOG(LogTemp, Warning, TEXT("Attempted to get opposing quadrant data for some unknown ChildNode. Did we forget to add a case?"));
+		return ChildNode::Northwest;
 	}
-
-
-	return ChildNode::Northwest;
-	// TODO add an error case here.
 }
 
 // TODO make these part of the game board class!! Or part of a helper class.
-ChildNode GetOpposingHorizontalQuadrant(ChildNode Child)
+ChildNode UGameBoard::GetOpposingHorizontalQuadrant(ChildNode Child) const
 {
 	switch (Child)
 	{
@@ -70,13 +72,13 @@ ChildNode GetOpposingHorizontalQuadrant(ChildNode Child)
 		return ChildNode::Southeast;
 	case ChildNode::Southeast:
 		return ChildNode::Southwest;
+	default:
+		UE_LOG(LogTemp, Warning, TEXT("Attempted to get opposing quadrant data for some unknown ChildNode. Did we forget to add a case?"));
+		return ChildNode::Northwest;
 	}	
-	
-	return ChildNode::Northwest;
-	// TODO add an error case here
 }
 
-ChildNode GetOpposingDiagonalQuadrant(ChildNode Child)
+ChildNode UGameBoard::GetOpposingDiagonalQuadrant(ChildNode Child) const
 {
 	switch (Child)
 	{
@@ -88,10 +90,10 @@ ChildNode GetOpposingDiagonalQuadrant(ChildNode Child)
 		return ChildNode::Northeast;
 	case ChildNode::Southeast:
 		return ChildNode::Northwest;
+	default:
+		UE_LOG(LogTemp, Warning, TEXT("Attempted to get opposing quadrant data for some unknown ChildNode. Did we forget to add a case?"));
+		return ChildNode::Northwest;
 	}
-
-	return ChildNode::Northwest;
-	// TODO add an error case here
 }
 
 TSharedPtr<const QuadTreeNode> UGameBoard::ConstructBoardWithCenteredQuadrant(ChildNode QuadrantToCenter) const
@@ -132,22 +134,32 @@ void UGameBoard::SimulateNextGeneration()
 {
 	TSharedPtr<const QuadTreeNode> NorthwestQuadrant, NortheastQuadrant, SouthwestQuadrant, SoutheastQuadrant;
 
-	// TODO Need at least 3 levels! 
-	// const int startingLevel = log2(sBoardSize);
+	/**
+	* Create four new trees. Each one will have one quadrant of our board in the center.
+	* In parallel, we go through and calculate the next generation on each of these new trees.
+	* This will give us the solved version of that quadrant. 
+	* To get our final solved board, we can recombine our quadrants in the correct order.
+	*/
+	TStaticArray<TSharedPtr<const QuadTreeNode>, 4> SolvedChildQuadrants;
 
-	const TSharedPtr<const QuadTreeNode> SolvedNorthwest = ConstructBoardWithCenteredQuadrant(ChildNode::Northwest)->GetNextGeneration();
-	const TSharedPtr<const QuadTreeNode> SolvedNortheast = ConstructBoardWithCenteredQuadrant(ChildNode::Northeast)->GetNextGeneration();
-	const TSharedPtr<const QuadTreeNode> SolvedSouthwest = ConstructBoardWithCenteredQuadrant(ChildNode::Southwest)->GetNextGeneration();
-	const TSharedPtr<const QuadTreeNode> SolvedSoutheast = ConstructBoardWithCenteredQuadrant(ChildNode::Southeast)->GetNextGeneration();
+	ParallelFor(ChildNode::kCount, [&](int32 QuadrantIndex)
+		{
+			SolvedChildQuadrants[QuadrantIndex] = ConstructBoardWithCenteredQuadrant((ChildNode) QuadrantIndex)->GetNextGeneration();
+		});
 
-	mRootNode = QuadTreeNode::CreateNodeWithSubnodes(mMaxLevelInTree, SolvedNorthwest, SolvedNortheast, SolvedSouthwest, SolvedSoutheast);
+	mRootNode = QuadTreeNode::CreateNodeWithSubnodes(mMaxLevelInTree, SolvedChildQuadrants[0], SolvedChildQuadrants[1], SolvedChildQuadrants[2], SolvedChildQuadrants[3]);
 }
 
-FString UGameBoard::GetBoardStringForBlockOfDimensionContainingCoordinate(int DesiredDimension, int64 X, int64 Y) const
+FString UGameBoard::GetBoardStringForBlockOfDimensionContainingCoordinate(int DesiredDimension, const FBoardCoordinate Coordinate) const
 {
-	TSharedPtr<const QuadTreeNode> FoundBlock = mRootNode->GetBlockOfDimensionContainingCoordinate((uint64) DesiredDimension, X, Y);
+	TSharedPtr<const QuadTreeNode> FoundBlock = mRootNode->GetBlockOfDimensionContainingCoordinate((uint64) DesiredDimension, Coordinate.mX, Coordinate.mY);
 
 	return FoundBlock->GetNodeString();
+}
+
+void UGameBoard::GetLocalLiveCellCoordinatesFromFoundBlock(int DesiredDimensionOfBlock, const FBoardCoordinate CoordinateToFind, TArray<FBoardCoordinate>& ResultsOut) const
+{
+
 }
 
 FString UGameBoard::GetBoardString() const

@@ -8,6 +8,27 @@
 
 #include "GameBoard.generated.h"
 
+/**
+ *
+ */
+USTRUCT(BlueprintType)
+struct FBoardCoordinate
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(BlueprintReadWrite)
+	int64 mX = 0;
+
+	UPROPERTY(BlueprintReadWrite)
+	int64 mY = 0;
+
+	void SetXAndY(int64 X, int64 Y)
+	{
+		mX = X;
+		mY = Y;
+	}
+};
 
 /**
  * 
@@ -18,15 +39,20 @@ class CONWAYSGAMEOFLIFE_API UGameBoard : public UObject
 	GENERATED_BODY()
 
 public:
-	// TODO add error handling for trying to construct a new board when one already exists?
 	UFUNCTION(BlueprintCallable)
-	void ConstructBoard(int BoardDimension);
+	static UGameBoard* InitializeBoardWithDimension(int BoardDimension);
 
 	UFUNCTION(BlueprintCallable)
-	void ConstructMaxSizeBoard();
+	static UGameBoard* InitializeMaxSizeBoard();
+
+private:
+	// Helper used to construct an empty board with size BoardDimension.
+	static UGameBoard* InitializeBoardHelper(uint64 BoardDimension);
+
+public:
 
 	UFUNCTION(BlueprintCallable)
-	void SetBit(const int64 X, const int64 Y);
+	void SetBit(const FBoardCoordinate Coordinate);
 
 	UFUNCTION(BlueprintCallable)
 	FString GetBoardString() const;
@@ -35,7 +61,10 @@ public:
 	void SimulateNextGeneration();
 
 	UFUNCTION(BlueprintCallable)
-	FString GetBoardStringForBlockOfDimensionContainingCoordinate(int DesiredDimension, int64 X, int64 Y) const;
+	FString GetBoardStringForBlockOfDimensionContainingCoordinate(int DesiredDimension, const FBoardCoordinate Coordinate) const;
+
+	UFUNCTION(BlueprintCallable)
+	void GetLocalLiveCellCoordinatesFromFoundBlock(int DesiredDimensionOfBlock, const FBoardCoordinate CoordinateToFind, TArray<FBoardCoordinate>& ResultsOut) const;
 	
 private:
 	// The dimensions of the board on one side. Must be a power of two. Boards are always square.
@@ -47,10 +76,16 @@ private:
 	// Root node of the quadtree representing our current board.
 	TSharedPtr<const QuadTreeNode> mRootNode;
 
+	ChildNode GetOpposingVerticalQuadrant(ChildNode Child) const;
+
+	ChildNode GetOpposingHorizontalQuadrant(ChildNode Child) const;
+
+	ChildNode GetOpposingDiagonalQuadrant(ChildNode Child) const;
+
+
 	// Constructs a new board with the provided quadrant in the center. Will have dimension (mBoardDimension / 2).
 	TSharedPtr<const QuadTreeNode> ConstructBoardWithCenteredQuadrant(ChildNode QuadrantToCenter) const;
 
-	// Helper used to construct an empty board with size BoardDimension.
-	void ConstructBoardHelper(uint64 BoardDimension);
+
 };
 

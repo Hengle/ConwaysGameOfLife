@@ -3,9 +3,8 @@
 
 #include "QuadTreeNode.h"
 
-// Initialize our canonical leaf nodes. Having canonical versions of these will cut down on memory requirements.
+// Initialization for our canonical leaf nodes. Having canonical versions of these will cut down on memory requirements.
 TSharedPtr<const QuadTreeNode> QuadTreeNode::sCanonicalLiveCell = MakeShareable<QuadTreeNode>(new QuadTreeNode(true));
-
 TSharedPtr<const QuadTreeNode> QuadTreeNode::sCanonicalDeadCell = MakeShareable<QuadTreeNode>(new QuadTreeNode(false));
 
 TSharedPtr<const QuadTreeNode> QuadTreeNode::CreateLeaf(bool IsAlive)
@@ -295,7 +294,7 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::GetNextGeneration() const
 	CenterSouth = ConstructHorizontalCenteredGrandchild(Southwest(), Southeast());
 	CenterSoutheast = Southeast()->ConstructCenteredChild();
 
-	// Construct our four nodes that will give us each of our four quadrants for the intended centered result node and solve for them in parallel. 
+	// Construct our four nodes that will give us each of our four quadrants for the intended centered result node and simulate their next generation in parallel. 
 	TSharedPtr<const QuadTreeNode> NewNorthwest, NewNortheast, NewSouthwest, NewSoutheast;
 
 	ParallelFor(ChildNode::kCount, [&](int32 QuadrantIndex)
@@ -320,7 +319,7 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::GetNextGeneration() const
 		});
 
 
-	// Recombine to get our result.
+	// Recombine to get our centered result node.
 	return CreateNodeWithSubnodes(mLevel - 1, NewNorthwest, NewNortheast, NewSouthwest, NewSoutheast);
 }
 
