@@ -15,23 +15,31 @@ enum ChildNode : int8
 };
 
 /**
- * 
+ * A class representing one node of a QuadTree that contains data for the Game of Life board.
  */
 class CONWAYSGAMEOFLIFE_API QuadTreeNode
 {
 public:
+	static TSharedPtr<const QuadTreeNode> CreateEmptyNode(const uint8 NumLevels);
+	
+	static TSharedPtr<const QuadTreeNode> CreateNodeWithSubnodes(const uint8 Level, const TSharedPtr<const QuadTreeNode> Northwest, const TSharedPtr<const QuadTreeNode> Northeast, const TSharedPtr<const QuadTreeNode> Southwest, const TSharedPtr<const QuadTreeNode> Southeast);
+
 	static TSharedPtr<const QuadTreeNode> CreateLeaf(bool IsAlive);
 
-	static TSharedPtr<const QuadTreeNode> CreateNodeWithSubnodes(const uint8 Level, const TSharedPtr<const QuadTreeNode> Northwest, const TSharedPtr<const QuadTreeNode> Northeast, const TSharedPtr<const QuadTreeNode> Southwest, const TSharedPtr<const QuadTreeNode> Southeast);
+private:
+	static TMap<QuadTreeNode, TSharedPtr<const QuadTreeNode>> sCanonicalNodes;
 	
-	static TSharedPtr<const QuadTreeNode> CreateEmptyNode(const uint8 NumLevels);
-
 	static TSharedPtr<const QuadTreeNode> GetNextGenerationCellFromNeighborhood(uint16 NeighborhoodBitset);
+
+	static TSharedPtr<const QuadTreeNode> GetCanonicalVersionOfNode(TSharedPtr<const QuadTreeNode> Node);
 
 public:
 	const uint8 mLevel;
 
+	QuadTreeNode();
+
 	QuadTreeNode(const bool IsAlive);
+	
 	QuadTreeNode(const uint8 Level, const TSharedPtr<const QuadTreeNode> Northwest, const TSharedPtr<const QuadTreeNode> Northeast, const TSharedPtr<const QuadTreeNode> Southwest, const TSharedPtr<const QuadTreeNode> Southeast);
 
 	bool operator==(const QuadTreeNode& Other) const;
@@ -64,6 +72,8 @@ public:
 	bool IsLeaf() const;
 
 	bool IsAlive() const;
+
+	bool IsValid() const;
 
 	TSharedPtr<const QuadTreeNode> GetBlockOfDimensionContainingCoordinate(const uint64 DesiredDimension, const int64 X, const int64 Y) const;
 

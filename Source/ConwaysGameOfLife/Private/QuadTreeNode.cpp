@@ -5,7 +5,8 @@
 
 TSharedPtr<const QuadTreeNode> QuadTreeNode::CreateLeaf(bool IsAlive)
 {
-	return MakeShareable<QuadTreeNode>(new QuadTreeNode(IsAlive));
+
+	return GetCanonicalVersionOfNode(MakeShareable<QuadTreeNode>(new QuadTreeNode(IsAlive)));
 }
 
 TSharedPtr<const QuadTreeNode> QuadTreeNode::CreateNodeWithSubnodes(const uint8 Level, const TSharedPtr<const QuadTreeNode> Northwest, const TSharedPtr<const QuadTreeNode> Northeast, const TSharedPtr<const QuadTreeNode> Southwest, const TSharedPtr<const QuadTreeNode> Southeast)
@@ -30,7 +31,7 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::CreateNodeWithSubnodes(const uint8 
 	}
 #endif
 
-	return MakeShareable<QuadTreeNode>(new QuadTreeNode(Level, Northwest, Northeast, Southwest, Southeast));
+	return GetCanonicalVersionOfNode(MakeShareable<QuadTreeNode>(new QuadTreeNode(Level, Northwest, Northeast, Southwest, Southeast)));
 }
 
 TSharedPtr<const QuadTreeNode> QuadTreeNode::CreateEmptyNode(const uint8 NumLevels)
@@ -42,7 +43,9 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::CreateEmptyNode(const uint8 NumLeve
 
 	TSharedPtr<const QuadTreeNode> EmptyChild = CreateEmptyNode(NumLevels - 1);
 
-	return CreateNodeWithSubnodes(NumLevels, EmptyChild, EmptyChild, EmptyChild, EmptyChild);
+	TSharedPtr<const QuadTreeNode> NewNode = CreateNodeWithSubnodes(NumLevels, EmptyChild, EmptyChild, EmptyChild, EmptyChild);
+
+	return GetCanonicalVersionOfNode(NewNode);
 }
 
 TSharedPtr<const QuadTreeNode> QuadTreeNode::GetNextGenerationCellFromNeighborhood(uint16 NeighborhoodBitset)
@@ -74,6 +77,32 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::GetNextGenerationCellFromNeighborho
 	}
 
 	return CreateLeaf(false);
+}
+
+TSharedPtr<const QuadTreeNode> QuadTreeNode::GetCanonicalVersionOfNode(TSharedPtr<const QuadTreeNode> Node)
+{
+	TSharedPtr<const QuadTreeNode>* CanonicalVersion = sCanonicalNodes.Find(Node.Get());
+	if (CanonicalVersion != nullptr)
+	{
+		return *CanonicalVersion;
+	}
+
+	// TODO need a lock here for thread safety;
+	// If we didn't find a canonical version of the node, let's add one.
+	TSharedPtr<const QuadTreeNode>& Result = sCanonicalNodes.FindOrAdd(Node.Get());
+	if (!Result.IsValid())
+	{
+		Result = Node;
+	}
+
+	return Result;
+}
+
+QuadTreeNode::QuadTreeNode() :
+	mLevel(-1),
+	mIsAlive(false)
+{
+
 }
 
 QuadTreeNode::QuadTreeNode(const bool IsAlive) :
@@ -387,6 +416,11 @@ bool QuadTreeNode::IsAlive() const
 	return mIsAlive;
 }
 
+bool QuadTreeNode::IsValid() const
+{
+	return mLevel >= 0;
+}
+
 TSharedPtr<const QuadTreeNode> QuadTreeNode::GetBlockOfDimensionContainingCoordinate(const uint64 DesiredDimension, const int64 X, const int64 Y) const
 {
 	if (GetNodeDimension() == DesiredDimension)
@@ -464,5 +498,10 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::ConstructCenteredGrandchild() const
 
 FORCEINLINE uint32 GetTypeHash(const QuadTreeNode& NodeToHash)
 {
-	return 0;
+	int32 NorthwestHash = PointerHash(NodeToHash.Northwest());
+	int32 NortheastHash = PointerHash(NodeToHash.Northeast());
+	int32 SouthwestHash = PointerHash(NodeToHash.Southwest());
+	int32 SoutheastHash = PointerHash(NodeToHash.Southeast());
+
+	return HashCombine(HashCombine(HashCombine(HashCombine(NodeToHash.IsAlive(), NorthwestHash), NortheastHash), SouthwestHash), SoutheastHash);
 }
