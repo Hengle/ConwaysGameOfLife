@@ -27,16 +27,14 @@ public:
 	static TSharedPtr<const QuadTreeNode> CreateLeaf(bool IsAlive);
 
 private:
-	static TMap<QuadTreeNode, TSharedPtr<const QuadTreeNode>> sCanonicalNodes;
-	
-	static TSharedPtr<const QuadTreeNode> GetNextGenerationCellFromNeighborhood(uint16 NeighborhoodBitset);
+	static TSharedPtr<const QuadTreeNode> sCanonicalLiveCell;
 
-	static TSharedPtr<const QuadTreeNode> GetCanonicalVersionOfNode(TSharedPtr<const QuadTreeNode> Node);
+	static TSharedPtr<const QuadTreeNode> sCanonicalDeadCell;
+
+	static TSharedPtr<const QuadTreeNode> GetNextGenerationCellFromNeighborhood(uint16 NeighborhoodBitset);
 
 public:
 	const uint8 mLevel;
-
-	QuadTreeNode();
 
 	QuadTreeNode(const bool IsAlive);
 	
