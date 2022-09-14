@@ -10,9 +10,6 @@
 
 #include "GameBoard.generated.h"
 
-// The maximum dimension of our Game of Life board.
-constexpr uint64 kMaxSizeBoard = UINT64_MAX;
-
 /**
  * A square board used to simulate the Game of Life.
  */
@@ -32,6 +29,7 @@ public:
 
 private:
 	// Helper used to construct an empty board with size BoardDimension.
+	UFUNCTION()
 	static UGameBoard* InitializeBoardHelper(uint64 BoardDimension);
 
 public:
@@ -57,15 +55,17 @@ public:
 	
 private:
 	// The dimensions of the board on one side. Must be a power of two. Boards are always square.
+	UPROPERTY()
 	uint64 mBoardDimension;
 
 	// The level of the root node in the tree.
+	UPROPERTY()
 	uint8 mMaxLevelInTree;
 
 	// Root node of the quadtree representing our current board.
 	TSharedPtr<const QuadTreeNode> mRootNode;
 
-	// Given a quadrant, returns the quadrant that is above or below it. 
+	// Given a quadrant, returns the quadrant that is above or below it.
 	ChildNode GetOpposingVerticalQuadrant(ChildNode Child) const;
 	
 	// Given a quadrant, returns the quadrant that is to the left or right of it.

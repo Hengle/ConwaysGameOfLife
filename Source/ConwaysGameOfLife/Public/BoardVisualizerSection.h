@@ -7,16 +7,22 @@
 #include "BoardVisualizerSection.generated.h"
 
 
-UCLASS(Blueprintable)
+UCLASS(Blueprintable, meta=(BlueprintSpawnableComponent))
 class CONWAYSGAMEOFLIFE_API ABoardVisualizerSection : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta=(DisplayName="Section Dimension"))
+	int mSectionDimension;
+
 	// Sets default values for this actor's properties
 	ABoardVisualizerSection();
 
 	//void SetRepresentedTreeNode(const QuadTreeNode* RepresentedNode);
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "Live Cell Representation Actor Class"))
+	TSubclassOf<AActor> mLiveCellRepresentationActorClass;
 
 protected:
 	// Called when the game starts or when spawned
@@ -28,8 +34,7 @@ private:
 	
 	int64 mGlobalYOfTopLeftCell;
 
-	UPROPERTY(EditDefaultsOnly)
-	int mSectionDimension;
+	
 
 	// We represent an entire node of the board, with size mSectionDimension.
 	//TSharedPtr<const QuadTreeNode> mRepresentedTreeNode;

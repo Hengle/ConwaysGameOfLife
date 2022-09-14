@@ -6,6 +6,9 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "BoardUtilities.generated.h"
 
+// The maximum dimension of our Game of Life board.
+constexpr uint64 kMaxSizeBoard = UINT64_MAX;
+
 /**
  * Structure to hold one coordinate on the Game Of Life board.
  */
@@ -16,14 +19,14 @@ struct FBoardCoordinate
 
 public:
 	// The X value of the coordinate.
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, meta=(DisplayName="X"))
 	int64 mX = 0;
 
 	// The Y value of the coordinate.
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, meta = (DisplayName = "Y"))
 	int64 mY = 0;
 
-	// Sets the values of mX and mY at the same time.
+	// Sets the values of X and Y at the same time.
 	void SetXAndY(int64 X, int64 Y)
 	{
 		mX = X;

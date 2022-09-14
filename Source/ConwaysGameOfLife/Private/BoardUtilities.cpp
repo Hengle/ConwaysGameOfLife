@@ -20,7 +20,7 @@ void UBoardUtilities::ParseStringIntoCoordinates(FString SourceString, TArray<FB
 
 	TArray<FString> TempCoordinateHolder;
 	const FString Delimiter = FString(",");
-	for (FString CoordinateString : CoordinateStrings)
+	for (const FString CoordinateString : CoordinateStrings)
 	{
 		TempCoordinateHolder.Empty();
 

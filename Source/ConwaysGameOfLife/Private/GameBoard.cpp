@@ -164,6 +164,7 @@ void UGameBoard::GetLocalLiveCellCoordinatesFromFoundBlock(int DesiredDimensionO
 	const int HalfBlockSize = DesiredDimensionOfBlock / 2;
 
 	// Go through the block and look for live cells.
+	// This could be slow, but we should only be doing this for a small number of blocks at a time.
 	for (int YIter = -HalfBlockSize; YIter < HalfBlockSize; ++YIter)
 	{
 		for (int XIter = -HalfBlockSize; XIter < HalfBlockSize; ++XIter)
