@@ -55,10 +55,10 @@ public:
 	bool operator==(const QuadTreeNode& Other) const;
 
 	// Returns the status of the cell at X and Y, where X and Y are local coordinates in this block.
-	bool GetIsCellAlive(const int64 X, const int64 Y) const;
+	bool GetIsCellAlive(const uint64 X, const uint64 Y) const;
 
 	// Returns a node that is the same as the current node, but with the bit at X and Y set to alive.
-	TSharedPtr<const QuadTreeNode> SetCellToAlive(const int64 X, const int64 Y) const;
+	TSharedPtr<const QuadTreeNode> SetCellToAlive(const uint64 X, const uint64 Y) const;
 
 	// Returns the child node corresponding to Node.
 	TSharedPtr<const QuadTreeNode> GetChild(ChildNode Node) const;
@@ -94,7 +94,7 @@ public:
 	bool IsAlive() const;
 
 	// Returns the node with size DesiredDimensionxDesiredDimension that contains the cell with coordinates (X, Y).
-	TSharedPtr<const QuadTreeNode> GetBlockOfDimensionContainingCoordinate(const uint64 DesiredDimension, const int64 X, const int64 Y) const;
+	TSharedPtr<const QuadTreeNode> GetBlockOfDimensionContainingCoordinate(const uint64 DesiredDimension, const uint64 X, const uint64 Y) const;
 
 private:
 	// Pointers to each of our children, which each represent 1/4 of this node's space on the board.
@@ -104,7 +104,7 @@ private:
 	bool mIsAlive;
 
 	// Returns the child node that X and Y are contained in. Puts the relative coordinates for X and Y within that child in the out params.
-	ChildNode GetChildAndLocalCoordinates(const int64 X, const int64 Y, int64& LocalXOut, int64& LocalYOut) const;
+	ChildNode GetChildAndLocalCoordinates(const uint64 X, const uint64 Y, uint64& LocalXOut, uint64& LocalYOut) const;
 
 	// Returns a node representing the centered 2x2 interior square of cells if they were advanced one generation.
 	TSharedPtr<const QuadTreeNode> Run4x4Simulation() const;

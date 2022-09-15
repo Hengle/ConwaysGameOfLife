@@ -114,7 +114,7 @@ bool QuadTreeNode::operator==(const QuadTreeNode& Other) const
 		(Southeast() == Other.Southeast());
 }
 
-ChildNode QuadTreeNode::GetChildAndLocalCoordinates(const int64 X, const int64 Y, int64& LocalXOut, int64& LocalYOut) const
+ChildNode QuadTreeNode::GetChildAndLocalCoordinates(const uint64 X, const uint64 Y, uint64& LocalXOut, uint64& LocalYOut) const
 {
 #if !UE_BUILD_SHIPPING
 	if (IsLeaf())
@@ -124,52 +124,49 @@ ChildNode QuadTreeNode::GetChildAndLocalCoordinates(const int64 X, const int64 Y
 	}
 #endif
 
-	const int64 HalfChildSize = GetNodeDimension() / 4;
+	const uint64 ChildNodeDimension = pow(2, mLevel - 1);
 
-	if (X < 0)
+	LocalXOut = X;
+	LocalYOut = Y;
+
+	if (X < ChildNodeDimension)
 	{
-		LocalXOut = X + HalfChildSize;
-		
-		if (Y < 0)
+		if (Y < ChildNodeDimension)
 		{
-			LocalYOut = Y + HalfChildSize;
-
-			return ChildNode::Northwest;
+			return ChildNode::Southwest;
 		}
 		else
 		{
-			LocalYOut = Y - HalfChildSize;
+			LocalYOut = Y - ChildNodeDimension;
 			
-			return ChildNode::Southwest;
+			return ChildNode::Northwest;
 		}
 	}
 	else
 	{
-		LocalXOut = X - HalfChildSize;
+		LocalXOut = X - ChildNodeDimension;
 
-		if (Y < 0)
+		if (Y < ChildNodeDimension)
 		{
-			LocalYOut = Y + HalfChildSize;
-			
-			return ChildNode::Northeast;
+			return ChildNode::Southeast;
 		}
 		else
 		{
-			LocalYOut = Y - HalfChildSize;
+			LocalYOut = Y - ChildNodeDimension;
 
-			return ChildNode::Southeast;
+			return ChildNode::Northeast;
 		}
 	}
 }
 
-bool QuadTreeNode::GetIsCellAlive(const int64 X, const int64 Y) const
+bool QuadTreeNode::GetIsCellAlive(const uint64 X, const uint64 Y) const
 {
 	if (IsLeaf())
 	{
 		return IsAlive();
 	}
 
-	int64 ChildLocalX, ChildLocalY;
+	uint64 ChildLocalX, ChildLocalY;
 	const ChildNode ChildContainingXAndY = GetChildAndLocalCoordinates(X, Y, ChildLocalX, ChildLocalY);
 
 	const TSharedPtr<const QuadTreeNode> Child = mChildren[ChildContainingXAndY];
@@ -184,14 +181,14 @@ bool QuadTreeNode::GetIsCellAlive(const int64 X, const int64 Y) const
 	return Child->GetIsCellAlive(ChildLocalX, ChildLocalY);
 }
 
-TSharedPtr<const QuadTreeNode> QuadTreeNode::SetCellToAlive(const int64 X, const int64 Y) const
+TSharedPtr<const QuadTreeNode> QuadTreeNode::SetCellToAlive(const uint64 X, const uint64 Y) const
 {
 	if (IsLeaf())
 	{
 		return CreateLeaf(true);
 	}
 
-	int64 ChildLocalX, ChildLocalY;
+	uint64 ChildLocalX, ChildLocalY;
 	const ChildNode ChildContainingXAndY = GetChildAndLocalCoordinates(X, Y, ChildLocalX, ChildLocalY);
 
 	TSharedPtr<const QuadTreeNode> NewChild = mChildren[ChildContainingXAndY];
@@ -247,12 +244,12 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::Run4x4Simulation() const
 	uint16 Bitset = 0;
 
 	// Place all neighbors in this 4x4 bitset, starting in the upper left and going row by row.
-	for (int YIter = -2; YIter < 2; ++YIter)
+	for (uint64 YIter = 4; YIter > 0; --YIter)
 	{
-		for (int XIter = -2; XIter < 2; ++XIter)
+		for (uint64 XIter = 0; XIter < 4; ++XIter)
 		{
 			// Append either a 1 or a 0 depending on whether or not the cell is alive.
-			Bitset = (Bitset << 1) + GetIsCellAlive(XIter, YIter);
+			Bitset = (Bitset << 1) + GetIsCellAlive(XIter, YIter - 1);
 		}
 	}
 
@@ -367,13 +364,13 @@ FString QuadTreeNode::GetNodeString() const
 {
 	FString Result = "\n";
 
-	int64 HalfSize = GetNodeDimension() / 2;
+	uint64 Dimension = GetNodeDimension();
 
-	for (int YIter = HalfSize - 1; YIter >= -HalfSize; --YIter)
+	for (uint64 YIter = Dimension; YIter > 0; --YIter)
 	{
-		for (int XIter = -HalfSize; XIter < HalfSize; ++XIter)
+		for (uint64 XIter = 0; XIter < Dimension; ++XIter)
 		{
-			if (GetIsCellAlive(XIter, YIter))
+			if (GetIsCellAlive(XIter, YIter - 1))
 			{
 				Result += "A ";
 			}
@@ -421,7 +418,7 @@ bool QuadTreeNode::IsAlive() const
 	return mIsAlive;
 }
 
-TSharedPtr<const QuadTreeNode> QuadTreeNode::GetBlockOfDimensionContainingCoordinate(const uint64 DesiredDimension, const int64 X, const int64 Y) const
+TSharedPtr<const QuadTreeNode> QuadTreeNode::GetBlockOfDimensionContainingCoordinate(const uint64 DesiredDimension, const uint64 X, const uint64 Y) const
 {
 	if (GetNodeDimension() == DesiredDimension)
 	{
@@ -433,7 +430,7 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::GetBlockOfDimensionContainingCoordi
 		return nullptr;
 	}
 
-	int64 ChildLocalX, ChildLocalY;
+	uint64 ChildLocalX, ChildLocalY;
 	const ChildNode ChildContainingXAndY = GetChildAndLocalCoordinates(X, Y, ChildLocalX, ChildLocalY);
 
 	return GetChild(ChildContainingXAndY)->GetBlockOfDimensionContainingCoordinate(DesiredDimension, ChildLocalX, ChildLocalY);

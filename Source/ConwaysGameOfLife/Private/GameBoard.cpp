@@ -13,7 +13,7 @@ UGameBoard* UGameBoard::InitializeBoardWithDimension(int BoardDimension)
 		return nullptr;
 	}
 
-	return InitializeBoardHelper(INT32_MAX * 2);
+	return InitializeBoardHelper(16);
 }
 
 UGameBoard* UGameBoard::InitializeMaxSizeBoard()
@@ -108,7 +108,7 @@ TSharedPtr<const QuadTreeNode> UGameBoard::ConstructBoardWithCenteredQuadrant(Ch
 	(-5, 5)
 	(-4, 4)
 	(-3, 4)
-	(-4, 5)
+	(-3, 5)
 	(-3, 6)
 		*/
 	
@@ -186,24 +186,24 @@ void UGameBoard::SimulateNextGeneration()
 	//mRootNode = QuadTreeNode::CreateNodeWithSubnodes(mMaxLevelInTree, SolvedChildQuadrants[0], SolvedChildQuadrants[1], SolvedChildQuadrants[2], SolvedChildQuadrants[3]);
 }
 
-FString UGameBoard::GetBoardStringForBlockOfDimensionContainingCoordinate(int DesiredDimension, const FBoardCoordinate Coordinate) const
+FString UGameBoard::GetBoardStringForBlockOfDimensionContainingCoordinate(uint64 DesiredDimension, const FBoardCoordinate Coordinate) const
 {
-	TSharedPtr<const QuadTreeNode> FoundBlock = mRootNode->GetBlockOfDimensionContainingCoordinate((uint64) DesiredDimension, Coordinate.mX, Coordinate.mY);
+	TSharedPtr<const QuadTreeNode> FoundBlock = mRootNode->GetBlockOfDimensionContainingCoordinate(DesiredDimension, Coordinate.mX, Coordinate.mY);
 
 	return FoundBlock->GetNodeString();
 }
 
-void UGameBoard::GetLocalLiveCellCoordinatesFromFoundBlock(int DesiredDimensionOfBlock, const FBoardCoordinate CoordinateToFind, TArray<FBoardCoordinate>& ResultsOut) const
+void UGameBoard::GetLocalLiveCellCoordinatesFromFoundBlock(uint64 DesiredDimensionOfBlock, const FBoardCoordinate CoordinateToFind, TArray<FBoardCoordinate>& ResultsOut) const
 {
-	TSharedPtr<const QuadTreeNode> FoundBlock = mRootNode->GetBlockOfDimensionContainingCoordinate((uint64)DesiredDimensionOfBlock, CoordinateToFind.mX, CoordinateToFind.mY);
+	TSharedPtr<const QuadTreeNode> FoundBlock = mRootNode->GetBlockOfDimensionContainingCoordinate(DesiredDimensionOfBlock, CoordinateToFind.mX, CoordinateToFind.mY);
 
-	const int HalfBlockSize = DesiredDimensionOfBlock / 2;
+	const uint64 BlockDimension = FoundBlock->GetNodeDimension();
 
 	// Go through the block and look for live cells.
 	// This could be slow, but we should only be doing this for a small number of blocks at a time.
-	for (int YIter = -HalfBlockSize; YIter < HalfBlockSize; ++YIter)
+	for (uint64 YIter = 0; YIter < BlockDimension; ++YIter)
 	{
-		for (int XIter = -HalfBlockSize; XIter < HalfBlockSize; ++XIter)
+		for (uint64 XIter = 0; XIter < BlockDimension; ++XIter)
 		{
 			if (FoundBlock->GetIsCellAlive(XIter, YIter))
 			{
@@ -216,9 +216,9 @@ void UGameBoard::GetLocalLiveCellCoordinatesFromFoundBlock(int DesiredDimensionO
 	}
 }
 
-TSharedPtr<const QuadTreeNode> UGameBoard::GetBlockOfDimensionContainingCoordinate(int DesiredDimensionOfBlock, int64 X, int64 Y) const
+TSharedPtr<const QuadTreeNode> UGameBoard::GetBlockOfDimensionContainingCoordinate(uint64 DesiredDimensionOfBlock, uint64 X, uint64 Y) const
 {
-	return mRootNode->GetBlockOfDimensionContainingCoordinate((uint64)DesiredDimensionOfBlock, X, Y);
+	return mRootNode->GetBlockOfDimensionContainingCoordinate(DesiredDimensionOfBlock, X, Y);
 }
 
 FString UGameBoard::GetBoardString() const

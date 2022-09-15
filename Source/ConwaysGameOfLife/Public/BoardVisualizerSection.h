@@ -23,11 +23,15 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "Cell Representation Actor Class"))
 	TSubclassOf<AActor> mCellRepresentationActorClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "X Coordinate To Represent"))
-	int64 mXCoordinateToRepresent;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int64 xCoordToRepresent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Y Coordinate To Represent"))
-	int64 mYCoordinateToRepresent;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int64 yCoordToRepresent;
+
+	uint64 mXCoordinateToRepresent;
+
+	uint64 mYCoordinateToRepresent;
 
 	// Sets default values for this actor's properties
 	ABoardVisualizerSection();
@@ -41,7 +45,13 @@ public:
 
 	void InitializeWithSectionDimension_Implementation(int SectionDimension);
 
+	UFUNCTION(BlueprintCallable)
+	void SetCoordinateToRepresent(FBoardCoordinate Coordinate);
+
 	// Update the visualizer section to the current state of the provided game board.
 	UFUNCTION(BlueprintCallable)
 	void UpdateRepresentation(const UGameBoard* GameBoard);
+
+	UFUNCTION(BlueprintCallable)
+	void AddCellToMap(int64 LocalXCoordinate, int64 LocalYCoordinate, AActor* Cell);
 };

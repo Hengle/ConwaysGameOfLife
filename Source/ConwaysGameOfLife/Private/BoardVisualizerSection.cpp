@@ -18,6 +18,12 @@ void ABoardVisualizerSection::InitializeWithSectionDimension_Implementation(int 
 	mSectionDimension = SectionDimension;
 }
 
+void ABoardVisualizerSection::SetCoordinateToRepresent(FBoardCoordinate Coordinate)
+{
+	mXCoordinateToRepresent = Coordinate.mX;
+	mYCoordinateToRepresent = Coordinate.mY;
+}
+
 void ABoardVisualizerSection::UpdateRepresentation(const UGameBoard* GameBoard)
 {
 	if (GameBoard != nullptr)
@@ -36,4 +42,11 @@ void ABoardVisualizerSection::UpdateRepresentation(const UGameBoard* GameBoard)
 			}
 		}
 	}
+}
+
+void ABoardVisualizerSection::AddCellToMap(int64 LocalXCoordinate, int64 LocalYCoordinate, AActor* Cell)
+{
+	FBoardCoordinate Coordinate;
+	Coordinate.SetXAndY(LocalXCoordinate, LocalYCoordinate);
+	mCoordinateToCellActorMap.Add(Coordinate, Cell);
 }

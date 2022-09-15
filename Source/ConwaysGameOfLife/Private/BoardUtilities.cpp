@@ -32,7 +32,7 @@ void UBoardUtilities::ParseStringIntoCoordinates(FString SourceString, TArray<FB
 		FBoardCoordinate NewCoordinate;
 		if (FDefaultValueHelper::ParseInt64(TempCoordinateHolder[0], NewX) && FDefaultValueHelper::ParseInt64(TempCoordinateHolder[1], NewY))
 		{
-			NewCoordinate.SetXAndY(NewX, NewY);
+			NewCoordinate.SetXAndYFromSignedCoordinates(NewX, NewY);
 			ResultsOut.AddUnique(NewCoordinate);
 		}
 	}
@@ -42,5 +42,12 @@ int64 UBoardUtilities::ParseStringToInt64(FString SourceString)
 {
 	int64 Result = 0;
 	FDefaultValueHelper::ParseInt64(SourceString, Result);
+	return Result;
+}
+
+FBoardCoordinate UBoardUtilities::MakeCoordinateFromInts(int64 X, int64 Y)
+{
+	FBoardCoordinate Result;
+	Result.SetXAndYFromSignedCoordinates(X, Y);
 	return Result;
 }

@@ -19,15 +19,21 @@ struct FBoardCoordinate
 
 public:
 	// The X value of the coordinate.
-	UPROPERTY(BlueprintReadWrite, meta=(DisplayName="X"))
-	int64 mX = 0;
+	//UPROPERTY(BlueprintReadWrite, meta=(DisplayName="X"))
+	uint64 mX = 0;
 
 	// The Y value of the coordinate.
-	UPROPERTY(BlueprintReadWrite, meta = (DisplayName = "Y"))
-	int64 mY = 0;
+	//UPROPERTY(BlueprintReadWrite, meta = (DisplayName = "Y"))
+	uint64 mY = 0;
 
-	// Sets the values of X and Y at the same time.
-	void SetXAndY(int64 X, int64 Y)
+	// Sets the values of X and Y at the same time. Only works for max board size!
+	void SetXAndYFromSignedCoordinates(int64 X, int64 Y)
+	{
+		mX = X + INT64_MAX;
+		mY = Y + INT64_MAX;
+	}
+
+	void SetXAndY(uint64 X, uint64 Y)
 	{
 		mX = X;
 		mY = Y;
@@ -61,5 +67,7 @@ public:
 	// Converts a string to an int64.
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	static int64 ParseStringToInt64(FString SourceString);
-	
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	static FBoardCoordinate MakeCoordinateFromInts(int64 X, int64 Y);
 };

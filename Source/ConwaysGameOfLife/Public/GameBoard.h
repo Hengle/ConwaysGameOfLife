@@ -45,14 +45,12 @@ public:
 	void SimulateNextGeneration();
 
 	// Returns a string representing a portion of the board indicated by DesiredDimension and Coordinate. For Debug purposes.
-	UFUNCTION(BlueprintCallable)
-	FString GetBoardStringForBlockOfDimensionContainingCoordinate(int DesiredDimension, const FBoardCoordinate Coordinate) const;
+	FString GetBoardStringForBlockOfDimensionContainingCoordinate(uint64 DesiredDimension, const FBoardCoordinate Coordinate) const;
 
 	// Populates an array of FBoardCoordinates with the location of every live cell in a portion of the board indicated by the desired dimension and coordinate to find.
-	UFUNCTION(BlueprintCallable)
-	void GetLocalLiveCellCoordinatesFromFoundBlock(int DesiredDimensionOfBlock, const FBoardCoordinate CoordinateToFind, TArray<FBoardCoordinate>& ResultsOut) const;
+	void GetLocalLiveCellCoordinatesFromFoundBlock(uint64 DesiredDimensionOfBlock, const FBoardCoordinate CoordinateToFind, TArray<FBoardCoordinate>& ResultsOut) const;
 
-	TSharedPtr<const QuadTreeNode> GetBlockOfDimensionContainingCoordinate(int DesiredDimensionOfBlock, int64 X, int64 Y) const;
+	TSharedPtr<const QuadTreeNode> GetBlockOfDimensionContainingCoordinate(uint64 DesiredDimensionOfBlock, uint64 X, uint64 Y) const;
 	
 private:
 	// The dimensions of the board on one side. Must be a power of two. Boards are always square.
