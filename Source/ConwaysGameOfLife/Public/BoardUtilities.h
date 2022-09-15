@@ -70,4 +70,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	static FBoardCoordinate MakeCoordinateFromInts(int64 X, int64 Y);
+
+	UFUNCTION(BlueprintCallable)
+	static void AddUniqueValueToBoardCoordinateArray(TArray<FBoardCoordinate>& Array, FBoardCoordinate Value);
 };

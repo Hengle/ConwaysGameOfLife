@@ -51,3 +51,8 @@ FBoardCoordinate UBoardUtilities::MakeCoordinateFromInts(int64 X, int64 Y)
 	Result.SetXAndYFromSignedCoordinates(X, Y);
 	return Result;
 }
+
+void UBoardUtilities::AddUniqueValueToBoardCoordinateArray(TArray<FBoardCoordinate>& Array, FBoardCoordinate Value)
+{
+	Array.AddUnique(Value);
+}
