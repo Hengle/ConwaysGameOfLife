@@ -8,21 +8,15 @@ ABoardVisualizerSection::ABoardVisualizerSection()
 {
  	// This Actor should not tick, it should be told when to update via the Controller.
 	PrimaryActorTick.bCanEverTick = false;
-
 }
 
-// Called when the game starts or when spawned
-void ABoardVisualizerSection::BeginPlay()
+
+void ABoardVisualizerSection::InitializeWithSectionDimension_Implementation(int SectionDimension)
 {
-	Super::BeginPlay();
-	
+	mSectionDimension = SectionDimension;
 }
 
-/*
-void ABoardVisualizerSection::SetRepresentedTreeNode(const QuadTreeNode* RepresentedNode)
+void ABoardVisualizerSection::UpdateRepresentation_Implementation(const TArray<FBoardCoordinate>& LiveCoordinates)
 {
-	mRepresentedTreeNode = MakeShareable<const QuadTreeNode>(RepresentedNode);
+
 }
-*/
-
-

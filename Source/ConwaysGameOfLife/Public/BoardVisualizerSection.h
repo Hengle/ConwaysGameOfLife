@@ -4,24 +4,35 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "BoardUtilities.h"
 #include "BoardVisualizerSection.generated.h"
-
 
 UCLASS(Blueprintable, meta=(BlueprintSpawnableComponent))
 class CONWAYSGAMEOFLIFE_API ABoardVisualizerSection : public AActor
 {
 	GENERATED_BODY()
 	
-public:	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta=(DisplayName="Section Dimension"))
+public:
+	// The dimension of the section of this board that this Actor represents.
+	UPROPERTY(BlueprintReadOnly, meta=(DisplayName="Section Dimension"))
 	int mSectionDimension;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "Live Cell Representation Actor Class"))
-	TSubclassOf<AActor> mLiveCellRepresentationActorClass;
+	// The Actor class we should use to represent cells.
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "Cell Representation Actor Class"))
+	TSubclassOf<AActor> mCellRepresentationActorClass;
 
 	// Sets default values for this actor's properties
 	ABoardVisualizerSection();
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+
+	// Event to initialize the board.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void InitializeWithSectionDimension(int SectionDimension);
+
+	void InitializeWithSectionDimension_Implementation(int SectionDimension);
+
+	// Event to update the representation with a new list of live coordinates.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void UpdateRepresentation(const TArray<FBoardCoordinate>& LiveCoordinates);
+
+	void UpdateRepresentation_Implementation(const TArray<FBoardCoordinate>& LiveCoordinates);
 };
