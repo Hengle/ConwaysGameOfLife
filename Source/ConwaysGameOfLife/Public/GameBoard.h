@@ -29,7 +29,6 @@ public:
 
 private:
 	// Helper used to construct an empty board with size BoardDimension.
-	UFUNCTION()
 	static UGameBoard* InitializeBoardHelper(uint64 BoardDimension);
 
 public:

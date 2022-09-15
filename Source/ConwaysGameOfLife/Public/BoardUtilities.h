@@ -39,6 +39,12 @@ public:
 	}
 };
 
+// Hash function for an FBoardCoordinate
+FORCEINLINE uint32 GetTypeHash(const FBoardCoordinate& BoardCoordinate)
+{
+	return HashCombine(GetTypeHash(BoardCoordinate.mX), GetTypeHash(BoardCoordinate.mY));
+}
+
 /**
  * Various helper functions for Game of Life.
  */
@@ -48,7 +54,7 @@ class CONWAYSGAMEOFLIFE_API UBoardUtilities : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
-	// Parses a string of coordinate separated by newlines into an array of FBoardCoordinates.
+	// Parses a string of coordinates separated by newlines into an array of FBoardCoordinates.
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	static void ParseStringIntoCoordinates(FString SourceString, TArray<FBoardCoordinate>& ResultsOut);
 	
