@@ -134,13 +134,13 @@ ChildNode QuadTreeNode::GetChildAndLocalCoordinates(const int64 X, const int64 Y
 		{
 			LocalYOut = Y + HalfChildSize;
 
-			return ChildNode::Southwest;
+			return ChildNode::Northwest;
 		}
 		else
 		{
 			LocalYOut = Y - HalfChildSize;
 			
-			return ChildNode::Northwest;
+			return ChildNode::Southwest;
 		}
 	}
 	else
@@ -151,13 +151,13 @@ ChildNode QuadTreeNode::GetChildAndLocalCoordinates(const int64 X, const int64 Y
 		{
 			LocalYOut = Y + HalfChildSize;
 			
-			return ChildNode::Southeast;
+			return ChildNode::Northeast;
 		}
 		else
 		{
 			LocalYOut = Y - HalfChildSize;
 
-			return ChildNode::Northeast;
+			return ChildNode::Southeast;
 		}
 	}
 }
@@ -247,7 +247,7 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::Run4x4Simulation() const
 	uint16 Bitset = 0;
 
 	// Place all neighbors in this 4x4 bitset, starting in the upper left and going row by row.
-	for (int YIter = 1; YIter >= -2; --YIter)
+	for (int YIter = -2; YIter < 2; ++YIter)
 	{
 		for (int XIter = -2; XIter < 2; ++XIter)
 		{
@@ -297,6 +297,7 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::GetNextGeneration() const
 	// Construct our four nodes that will give us each of our four quadrants for the intended centered result node and simulate their next generation in parallel. 
 	TSharedPtr<const QuadTreeNode> NewNorthwest, NewNortheast, NewSouthwest, NewSoutheast;
 
+	/*
 	ParallelFor(ChildNode::kCount, [&](int32 QuadrantIndex)
 		{
 			switch (QuadrantIndex) 
@@ -317,6 +318,30 @@ TSharedPtr<const QuadTreeNode> QuadTreeNode::GetNextGeneration() const
 				UE_LOG(LogTemp, Warning, TEXT("Reached some unknown case during ParallelFor in GetNextGeneration."))
 			}
 		});
+
+	*/
+
+	for (int i = 0; i < ChildNode::kCount; ++i)
+	{
+		switch (i)
+		{
+		case ChildNode::Northwest:
+			NewNorthwest = CreateNodeWithSubnodes(mLevel - 1, CenterNorthwest, CenterNorth, CenterWest, TrueCenter)->GetNextGeneration();
+			break;
+		case ChildNode::Northeast:
+			NewNortheast = CreateNodeWithSubnodes(mLevel - 1, CenterNorth, CenterNortheast, TrueCenter, CenterEast)->GetNextGeneration();
+			break;
+		case ChildNode::Southwest:
+			NewSouthwest = CreateNodeWithSubnodes(mLevel - 1, CenterWest, TrueCenter, CenterSouthwest, CenterSouth)->GetNextGeneration();
+			break;
+		case ChildNode::Southeast:
+			NewSoutheast = CreateNodeWithSubnodes(mLevel - 1, TrueCenter, CenterEast, CenterSouth, CenterSoutheast)->GetNextGeneration();
+			break;
+		default:
+			UE_LOG(LogTemp, Warning, TEXT("Reached some unknown case during ParallelFor in GetNextGeneration."))
+		}
+	}
+
 
 
 	// Recombine to get our centered result node.

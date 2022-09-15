@@ -51,6 +51,8 @@ public:
 	// Populates an array of FBoardCoordinates with the location of every live cell in a portion of the board indicated by the desired dimension and coordinate to find.
 	UFUNCTION(BlueprintCallable)
 	void GetLocalLiveCellCoordinatesFromFoundBlock(int DesiredDimensionOfBlock, const FBoardCoordinate CoordinateToFind, TArray<FBoardCoordinate>& ResultsOut) const;
+
+	TSharedPtr<const QuadTreeNode> GetBlockOfDimensionContainingCoordinate(int DesiredDimensionOfBlock, int64 X, int64 Y) const;
 	
 private:
 	// The dimensions of the board on one side. Must be a power of two. Boards are always square.

@@ -3,6 +3,8 @@
 
 #include "BoardVisualizerSection.h"
 
+#include "GameBoard.h"
+
 // Sets default values
 ABoardVisualizerSection::ABoardVisualizerSection()
 {
@@ -16,7 +18,22 @@ void ABoardVisualizerSection::InitializeWithSectionDimension_Implementation(int 
 	mSectionDimension = SectionDimension;
 }
 
-void ABoardVisualizerSection::UpdateRepresentation_Implementation(const TArray<FBoardCoordinate>& LiveCoordinates)
+void ABoardVisualizerSection::UpdateRepresentation(const UGameBoard* GameBoard)
 {
+	if (GameBoard != nullptr)
+	{
+		TSharedPtr<const QuadTreeNode> BlockToRepresent = GameBoard->GetBlockOfDimensionContainingCoordinate(mSectionDimension, mXCoordinateToRepresent, mYCoordinateToRepresent);
 
+		for (auto& Cell : mCoordinateToCellActorMap)
+		{
+			if (BlockToRepresent->GetIsCellAlive(Cell.Key.mX, Cell.Key.mY))
+			{
+				Cell.Value->SetActorHiddenInGame(false);
+			}
+			else
+			{
+				Cell.Value->SetActorHiddenInGame(true);
+			}
+		}
+	}
 }

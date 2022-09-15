@@ -13,7 +13,7 @@ UGameBoard* UGameBoard::InitializeBoardWithDimension(int BoardDimension)
 		return nullptr;
 	}
 
-	return InitializeBoardHelper(BoardDimension);
+	return InitializeBoardHelper(INT32_MAX * 2);
 }
 
 UGameBoard* UGameBoard::InitializeMaxSizeBoard()
@@ -103,6 +103,15 @@ TSharedPtr<const QuadTreeNode> UGameBoard::ConstructBoardWithCenteredQuadrant(Ch
 	TSharedPtr<const QuadTreeNode> OpposingVertical = mRootNode->GetChild(GetOpposingVerticalQuadrant(QuadrantToCenter));
 	TSharedPtr<const QuadTreeNode> OpposingDiagonal = mRootNode->GetChild(GetOpposingDiagonalQuadrant(QuadrantToCenter));
 
+	TSharedPtr<const QuadTreeNode> EmptyTree = QuadTreeNode::CreateEmptyNode(mMaxLevelInTree - 2);
+	/*
+	(-5, 5)
+	(-4, 4)
+	(-3, 4)
+	(-4, 5)
+	(-3, 6)
+		*/
+	
 	const TSharedPtr<const QuadTreeNode> NewNorthwest = QuadTreeNode::CreateNodeWithSubnodes(mMaxLevelInTree - 1,
 		OpposingDiagonal->Southeast(),
 		OpposingVertical->Southwest(),
@@ -126,7 +135,32 @@ TSharedPtr<const QuadTreeNode> UGameBoard::ConstructBoardWithCenteredQuadrant(Ch
 		OpposingHorizontal->Southwest(),
 		OpposingVertical->Northeast(),
 		OpposingDiagonal->Northwest());
+	/*
 
+	const TSharedPtr<const QuadTreeNode> NewNorthwest = QuadTreeNode::CreateNodeWithSubnodes(mMaxLevelInTree - 1,
+		EmptyTree,
+		EmptyTree,
+		EmptyTree,
+		MainQuadrant->Northwest());
+
+	const TSharedPtr<const QuadTreeNode> NewNortheast = QuadTreeNode::CreateNodeWithSubnodes(mMaxLevelInTree - 1,
+		EmptyTree,
+		EmptyTree,
+		MainQuadrant->Northeast(),
+		OpposingHorizontal->Northwest());
+
+	const TSharedPtr<const QuadTreeNode> NewSouthwest = QuadTreeNode::CreateNodeWithSubnodes(mMaxLevelInTree - 1,
+		EmptyTree,
+		MainQuadrant->Southwest(),
+		EmptyTree,
+		OpposingVertical->Northwest());
+
+	const TSharedPtr<const QuadTreeNode> NewSoutheast = QuadTreeNode::CreateNodeWithSubnodes(mMaxLevelInTree - 1,
+		MainQuadrant->Southeast(),
+		OpposingHorizontal->Southwest(),
+		OpposingVertical->Northeast(),
+		EmptyTree);
+	*/
 	return QuadTreeNode::CreateNodeWithSubnodes(mMaxLevelInTree, NewNorthwest, NewNortheast, NewSouthwest, NewSoutheast);
 }
 
@@ -134,20 +168,22 @@ void UGameBoard::SimulateNextGeneration()
 {
 	TSharedPtr<const QuadTreeNode> NorthwestQuadrant, NortheastQuadrant, SouthwestQuadrant, SoutheastQuadrant;
 
+	/*
 	/**
 	* Create four new trees. Each one will have one quadrant of our board in the center.
 	* In parallel, we go through and calculate the next generation on each of these new trees.
 	* This will give us the solved version of that quadrant. 
 	* To get our final solved board, we can recombine our quadrants in the correct order.
-	*/
+
 	TStaticArray<TSharedPtr<const QuadTreeNode>, 4> SolvedChildQuadrants;
 
 	ParallelFor(ChildNode::kCount, [&](int32 QuadrantIndex)
 		{
 			SolvedChildQuadrants[QuadrantIndex] = ConstructBoardWithCenteredQuadrant((ChildNode) QuadrantIndex)->GetNextGeneration();
 		});
-
-	mRootNode = QuadTreeNode::CreateNodeWithSubnodes(mMaxLevelInTree, SolvedChildQuadrants[0], SolvedChildQuadrants[1], SolvedChildQuadrants[2], SolvedChildQuadrants[3]);
+	*/
+	mRootNode = QuadTreeNode::CreateNodeWithSubnodes(mMaxLevelInTree, ConstructBoardWithCenteredQuadrant(ChildNode::Northwest)->GetNextGeneration(), ConstructBoardWithCenteredQuadrant(ChildNode::Northeast)->GetNextGeneration(), ConstructBoardWithCenteredQuadrant(ChildNode::Southwest)->GetNextGeneration(), ConstructBoardWithCenteredQuadrant(ChildNode::Southeast)->GetNextGeneration());
+	//mRootNode = QuadTreeNode::CreateNodeWithSubnodes(mMaxLevelInTree, SolvedChildQuadrants[0], SolvedChildQuadrants[1], SolvedChildQuadrants[2], SolvedChildQuadrants[3]);
 }
 
 FString UGameBoard::GetBoardStringForBlockOfDimensionContainingCoordinate(int DesiredDimension, const FBoardCoordinate Coordinate) const
@@ -178,6 +214,11 @@ void UGameBoard::GetLocalLiveCellCoordinatesFromFoundBlock(int DesiredDimensionO
 			}
 		}
 	}
+}
+
+TSharedPtr<const QuadTreeNode> UGameBoard::GetBlockOfDimensionContainingCoordinate(int DesiredDimensionOfBlock, int64 X, int64 Y) const
+{
+	return mRootNode->GetBlockOfDimensionContainingCoordinate((uint64)DesiredDimensionOfBlock, X, Y);
 }
 
 FString UGameBoard::GetBoardString() const
