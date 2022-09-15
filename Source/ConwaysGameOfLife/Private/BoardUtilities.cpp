@@ -18,9 +18,10 @@ void UBoardUtilities::ParseStringIntoCoordinates(FString SourceString, TArray<FB
 	TArray<FString> CoordinateStrings;
 	NoParentheses.ParseIntoArray(CoordinateStrings, *FString("\n"));
 
+	// Go through each our individual coordinate strings and parse them.
 	TArray<FString> TempCoordinateHolder;
 	const FString Delimiter = FString(",");
-	for (const FString CoordinateString : CoordinateStrings)
+	for (const FString& CoordinateString : CoordinateStrings)
 	{
 		TempCoordinateHolder.Empty();
 

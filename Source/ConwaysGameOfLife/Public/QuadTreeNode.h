@@ -18,6 +18,7 @@ enum ChildNode : int8
 
 /**
  * A class representing one node of a QuadTree that contains data for the Game of Life board.
+ * Utilizes unsigned int coordinates to support the max size of the board.
  */
 class CONWAYSGAMEOFLIFE_API QuadTreeNode
 {

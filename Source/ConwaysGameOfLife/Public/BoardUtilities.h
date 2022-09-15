@@ -1,5 +1,6 @@
 // Conway's Game Of Life in Unreal
 // Ilana Franklin, 2022
+
 #pragma once
 
 #include "CoreMinimal.h"
@@ -19,20 +20,19 @@ struct FBoardCoordinate
 
 public:
 	// The X value of the coordinate.
-	//UPROPERTY(BlueprintReadWrite, meta=(DisplayName="X"))
 	uint64 mX = 0;
 
 	// The Y value of the coordinate.
-	//UPROPERTY(BlueprintReadWrite, meta = (DisplayName = "Y"))
 	uint64 mY = 0;
 
-	// Sets the values of X and Y at the same time. Only works for max board size!
+	// Sets the values of X and Y at the same time with signed ints. Only works for max board size!
 	void SetXAndYFromSignedCoordinates(int64 X, int64 Y)
 	{
 		mX = X + INT64_MAX;
 		mY = Y + INT64_MAX;
 	}
 
+	// Set the values of X and Y at the same time with unsigned ints.
 	void SetXAndY(uint64 X, uint64 Y)
 	{
 		mX = X;
@@ -68,9 +68,11 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	static int64 ParseStringToInt64(FString SourceString);
 
+	// Given two signed ints, returns an FBoardCoordinate representing the equivalent unsigned coordinate.
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	static FBoardCoordinate MakeCoordinateFromInts(int64 X, int64 Y);
 
+	// Places Value into Array using AddUnique. Necessary because Blueprint does not support the unsigned coordinates in FBoardCoordinate.
 	UFUNCTION(BlueprintCallable)
 	static void AddUniqueValueToBoardCoordinateArray(TArray<FBoardCoordinate>& Array, FBoardCoordinate Value);
 };

@@ -1,5 +1,5 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
+// Conway's Game Of Life in Unreal
+// Ilana Franklin, 2022
 
 #include "BoardVisualizerSection.h"
 
@@ -10,12 +10,6 @@ ABoardVisualizerSection::ABoardVisualizerSection()
 {
  	// This Actor should not tick, it should be told when to update via the Controller.
 	PrimaryActorTick.bCanEverTick = false;
-}
-
-
-void ABoardVisualizerSection::InitializeWithSectionDimension_Implementation(int SectionDimension)
-{
-	mSectionDimension = SectionDimension;
 }
 
 void ABoardVisualizerSection::SetCoordinateToRepresent(FBoardCoordinate Coordinate)
@@ -30,6 +24,7 @@ void ABoardVisualizerSection::UpdateRepresentation(const UGameBoard* GameBoard)
 	{
 		TSharedPtr<const QuadTreeNode> BlockToRepresent = GameBoard->GetBlockOfDimensionContainingCoordinate(mSectionDimension, mXCoordinateToRepresent, mYCoordinateToRepresent);
 
+		// Hide dead cells and reveal live cells.
 		for (auto& Cell : mCoordinateToCellActorMap)
 		{
 			if (BlockToRepresent->GetIsCellAlive(Cell.Key.mX, Cell.Key.mY))

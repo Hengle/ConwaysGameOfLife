@@ -1,5 +1,5 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
+// Conway's Game Of Life in Unreal
+// Ilana Franklin, 2022
 #pragma once
 
 #include "CoreMinimal.h"
@@ -9,6 +9,9 @@
 
 class UGameBoard;
 
+/**
+ * An Actor responsible for visualizing one block on a GameBoard.
+ */
 UCLASS(Blueprintable, meta=(BlueprintSpawnableComponent))
 class CONWAYSGAMEOFLIFE_API ABoardVisualizerSection : public AActor
 {
@@ -23,28 +26,28 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "Cell Representation Actor Class"))
 	TSubclassOf<AActor> mCellRepresentationActorClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int64 xCoordToRepresent;
+	// The X component of the signed coordinate in the board that this section should represent.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "X Coordinate to Represent"))
+	int64 mSignedXCoordToRepresent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int64 yCoordToRepresent;
+	// The Y component of the signed coordinate in the board that this section should represent.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Y Coordinate to Represent"))
+	int64 mSignedYCoordToRepresent;
 
+	// The X component of the unsigned coordinate in the board that this section should represent.
 	uint64 mXCoordinateToRepresent;
 
+	// The Y component of the unsigned coordinate in the board that this section should represent.
 	uint64 mYCoordinateToRepresent;
 
 	// Sets default values for this actor's properties
 	ABoardVisualizerSection();
 
+	// A map of local FBoardCoordinate to their corresponding Cell Actors in the visualization.
 	UPROPERTY(BlueprintReadWrite, meta = (DisplayName = "Coordinate To Cell Actor Map"))
 	TMap<FBoardCoordinate, AActor*> mCoordinateToCellActorMap;
 
-	// Event to initialize the board.
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void InitializeWithSectionDimension(int SectionDimension);
-
-	void InitializeWithSectionDimension_Implementation(int SectionDimension);
-
+	// Sets the coordinate that this block represents to Coordinate.
 	UFUNCTION(BlueprintCallable)
 	void SetCoordinateToRepresent(FBoardCoordinate Coordinate);
 
@@ -52,6 +55,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void UpdateRepresentation(const UGameBoard* GameBoard);
 
+	// Converts local coordinates to their unsigned equivalents and adds them to the Coordinate->Cell Actor map.
 	UFUNCTION(BlueprintCallable)
 	void AddCellToMap(int64 LocalXCoordinate, int64 LocalYCoordinate, AActor* Cell);
 };

@@ -54,11 +54,9 @@ public:
 	
 private:
 	// The dimensions of the board on one side. Must be a power of two. Boards are always square.
-	UPROPERTY()
 	uint64 mBoardDimension;
 
 	// The level of the root node in the tree.
-	UPROPERTY()
 	uint8 mMaxLevelInTree;
 
 	// Root node of the quadtree representing our current board.

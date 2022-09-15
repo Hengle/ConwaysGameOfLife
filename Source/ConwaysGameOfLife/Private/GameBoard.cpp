@@ -5,15 +5,17 @@
 
 UGameBoard* UGameBoard::InitializeBoardWithDimension(int BoardDimension)
 {
+	UE_LOG(LogTemp, Error, TEXT("Currently lacking support for boards less than the max size!"));
+
 	constexpr int MinBoardSize = 8;
 
 	if (BoardDimension < MinBoardSize)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Attempting to call InitializeBoardWithDimension with a BoardDimension that is too small. Board Dimension must be at least TODO"));
+		UE_LOG(LogTemp, Error, TEXT("Attempting to call InitializeBoardWithDimension with a BoardDimension that is too small. Board Dimension must be at least %d"), MinBoardSize);
 		return nullptr;
 	}
 
-	return InitializeBoardHelper(16);
+	return InitializeBoardHelper(BoardDimension);
 }
 
 UGameBoard* UGameBoard::InitializeMaxSizeBoard()
@@ -59,7 +61,6 @@ ChildNode UGameBoard::GetOpposingVerticalQuadrant(ChildNode Child) const
 	}
 }
 
-// TODO make these part of the game board class!! Or part of a helper class.
 ChildNode UGameBoard::GetOpposingHorizontalQuadrant(ChildNode Child) const
 {
 	switch (Child)
@@ -104,13 +105,6 @@ TSharedPtr<const QuadTreeNode> UGameBoard::ConstructBoardWithCenteredQuadrant(Ch
 	TSharedPtr<const QuadTreeNode> OpposingDiagonal = mRootNode->GetChild(GetOpposingDiagonalQuadrant(QuadrantToCenter));
 
 	TSharedPtr<const QuadTreeNode> EmptyTree = QuadTreeNode::CreateEmptyNode(mMaxLevelInTree - 2);
-	/*
-	(-5, 5)
-	(-4, 4)
-	(-3, 4)
-	(-3, 5)
-	(-3, 6)
-		*/
 	
 	const TSharedPtr<const QuadTreeNode> NewNorthwest = QuadTreeNode::CreateNodeWithSubnodes(mMaxLevelInTree - 1,
 		OpposingDiagonal->Southeast(),
@@ -135,32 +129,7 @@ TSharedPtr<const QuadTreeNode> UGameBoard::ConstructBoardWithCenteredQuadrant(Ch
 		OpposingHorizontal->Southwest(),
 		OpposingVertical->Northeast(),
 		OpposingDiagonal->Northwest());
-	/*
 
-	const TSharedPtr<const QuadTreeNode> NewNorthwest = QuadTreeNode::CreateNodeWithSubnodes(mMaxLevelInTree - 1,
-		EmptyTree,
-		EmptyTree,
-		EmptyTree,
-		MainQuadrant->Northwest());
-
-	const TSharedPtr<const QuadTreeNode> NewNortheast = QuadTreeNode::CreateNodeWithSubnodes(mMaxLevelInTree - 1,
-		EmptyTree,
-		EmptyTree,
-		MainQuadrant->Northeast(),
-		OpposingHorizontal->Northwest());
-
-	const TSharedPtr<const QuadTreeNode> NewSouthwest = QuadTreeNode::CreateNodeWithSubnodes(mMaxLevelInTree - 1,
-		EmptyTree,
-		MainQuadrant->Southwest(),
-		EmptyTree,
-		OpposingVertical->Northwest());
-
-	const TSharedPtr<const QuadTreeNode> NewSoutheast = QuadTreeNode::CreateNodeWithSubnodes(mMaxLevelInTree - 1,
-		MainQuadrant->Southeast(),
-		OpposingHorizontal->Southwest(),
-		OpposingVertical->Northeast(),
-		EmptyTree);
-	*/
 	return QuadTreeNode::CreateNodeWithSubnodes(mMaxLevelInTree, NewNorthwest, NewNortheast, NewSouthwest, NewSoutheast);
 }
 
@@ -174,16 +143,15 @@ void UGameBoard::SimulateNextGeneration()
 	* In parallel, we go through and calculate the next generation on each of these new trees.
 	* This will give us the solved version of that quadrant. 
 	* To get our final solved board, we can recombine our quadrants in the correct order.
-
+	*/
 	TStaticArray<TSharedPtr<const QuadTreeNode>, 4> SolvedChildQuadrants;
 
 	ParallelFor(ChildNode::kCount, [&](int32 QuadrantIndex)
 		{
 			SolvedChildQuadrants[QuadrantIndex] = ConstructBoardWithCenteredQuadrant((ChildNode) QuadrantIndex)->GetNextGeneration();
 		});
-	*/
-	mRootNode = QuadTreeNode::CreateNodeWithSubnodes(mMaxLevelInTree, ConstructBoardWithCenteredQuadrant(ChildNode::Northwest)->GetNextGeneration(), ConstructBoardWithCenteredQuadrant(ChildNode::Northeast)->GetNextGeneration(), ConstructBoardWithCenteredQuadrant(ChildNode::Southwest)->GetNextGeneration(), ConstructBoardWithCenteredQuadrant(ChildNode::Southeast)->GetNextGeneration());
-	//mRootNode = QuadTreeNode::CreateNodeWithSubnodes(mMaxLevelInTree, SolvedChildQuadrants[0], SolvedChildQuadrants[1], SolvedChildQuadrants[2], SolvedChildQuadrants[3]);
+
+	mRootNode = QuadTreeNode::CreateNodeWithSubnodes(mMaxLevelInTree, SolvedChildQuadrants[0], SolvedChildQuadrants[1], SolvedChildQuadrants[2], SolvedChildQuadrants[3]);
 }
 
 FString UGameBoard::GetBoardStringForBlockOfDimensionContainingCoordinate(uint64 DesiredDimension, const FBoardCoordinate Coordinate) const
